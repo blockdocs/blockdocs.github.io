@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Block Man</title>
+  <title>Block Docs Guide</title>
   <script src="./res/js/jquery-2.2.4.js"></script>
   <script src="./res/js/jquery-ui.js"></script>
   <script src="./res/js/popper.min.js"></script>
@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="favicon.ico">
   <link rel="stylesheet" href="./res/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="./res/css/awesomplete.css">
-  <!-- <link rel="stylesheet" href="./res/css/font-awesome.css"> -->
+  
   <style>
     .mapSpot {
       border: black solid 1px;
@@ -24,19 +24,19 @@
       position: absolute;
     }
     .mapSpot:hover {
-      border: #055da0 solid 2px;
+      border: #0998a8 solid 2px;
     }
     .mapSpot.active {
-      border: #055da0 solid 2px;
-      background-color: #055da0;
+      border: #0998a8 solid 2px;
+      background-color: #0998a8;
     }
   </style>
 </head>
 <body style="user-select: none;">
   <div id="topBar" style="width: 100%; display: inline-block;">
-    <span id="titleAndButtons" style="padding-left: 10px;display: inline-block;width: 100%;padding-top: 7px;vertical-align: top;background-color: #055da0;color: white;padding-bottom: 5px;">
+    <span id="titleAndButtons" style="padding-left: 10px;display: inline-block;width: 100%;padding-top: 7px;vertical-align: top;background-color: #0998a8;color: white;padding-bottom: 5px;">
       <h3 style="display: inline-block;line-height: 35px;position: relative;top: -4px;vertical-align: top;margin-top: 3px;margin-bottom: 0px;margin-right: 10px;" aria-haspopup="true" aria-expanded="true">
-        <span id="mainTitle" style="vertical-align: text-top;"><a href="/" style="color: white; text-decoration: none;">Regional Anesthesia Guide</a></span>
+        <span id="mainTitle" style="vertical-align: text-top;"><a href="/" style="color: white; text-decoration: none;">Block Docs Guide</a></span>
       </h3>
       <span id="loadingTitle" style="margin-left: 10px; position: relative; top: -3px; display: none;"> Loading.. </span>
     </span>
@@ -641,8 +641,8 @@
         var focusId = mapHoverBlock || mapClickBlock;
         var focusData = blocks[focusId];
         if (focusData != null) {
-          showBlock(data.coverage, 'left', { color: '#055da0' });
-          showBlock(data.coverage, 'right', { color: '#055da0' });
+          showBlock(data.coverage, 'left', { color: '#0998a8' });
+          showBlock(data.coverage, 'right', { color: '#0998a8' });
         }
       } else {
         for (var blockName in backgroundBlocks) {
@@ -650,8 +650,8 @@
           showBlock(blocks[blockName].coverage, 'right', { color: 'grey' });
         }
         for (var blockName in selectedBlocks) {
-          showBlock(blocks[blockName].coverage, 'left', { color: '#055da0' });
-          showBlock(blocks[blockName].coverage, 'right', { color: '#055da0' });
+          showBlock(blocks[blockName].coverage, 'left', { color: '#0998a8' });
+          showBlock(blocks[blockName].coverage, 'right', { color: '#0998a8' });
         }
       }
 
@@ -722,7 +722,7 @@
         $('.flip').remove();
         $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
           $(n).css('visibility', '');
-          $(n).css('fill', '#055da0');
+          $(n).css('fill', '#0998a8');
         });
       })
 
