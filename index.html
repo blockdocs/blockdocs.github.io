@@ -1,0 +1,828 @@
+<html>
+<head>
+  <title>Block Man</title>
+  <script src="./res/js/jquery-2.2.4.js"></script>
+  <script src="./res/js/jquery-ui.js"></script>
+  <script src="./res/js/popper.min.js"></script>
+  <script src="./res/js/bootstrap.min.js"></script>
+  <script src="./res/js/lodash.min.js"></script>
+  <script src="./res/js/awesomplete.js"></script>
+  <script async src="./res/js/lodash.min.js"></script>
+  <script src="./res/js/fontawesome.js"></script>
+  <script src="./res/js/utilities.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/png" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="favicon.ico">
+  <link rel="stylesheet" href="./res/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="./res/css/awesomplete.css">
+  <!-- <link rel="stylesheet" href="./res/css/font-awesome.css"> -->
+  <style>
+    .mapSpot {
+      border: black solid 1px;
+      background-color: lightgray;
+      position: absolute;
+    }
+    .mapSpot:hover {
+      border: #055da0 solid 2px;
+    }
+    .mapSpot.active {
+      border: #055da0 solid 2px;
+      background-color: #055da0;
+    }
+  </style>
+</head>
+<body style="user-select: none;">
+  <div id="topBar" style="width: 100%; display: inline-block;">
+    <span id="titleAndButtons" style="padding-left: 10px;display: inline-block;width: 100%;padding-top: 7px;vertical-align: top;background-color: #055da0;color: white;padding-bottom: 5px;">
+      <h3 style="display: inline-block;line-height: 35px;position: relative;top: -4px;vertical-align: top;margin-top: 3px;margin-bottom: 0px;margin-right: 10px;" aria-haspopup="true" aria-expanded="true">
+        <span id="mainTitle" style="vertical-align: text-top;"><a href="/" style="color: white; text-decoration: none;">Regional Anesthesia Guide</a></span>
+      </h3>
+      <span id="loadingTitle" style="margin-left: 10px; position: relative; top: -3px; display: none;"> Loading.. </span>
+    </span>
+  </div>
+  <div id="mainBar" class="bg loading" style="float: left;width: 100%;height: calc(100% - 50px);background-color: white;overflow-y: scroll;">
+    <div id="mobileTop" style="width: 100%;background-color: lightgrey;text-align: center;font-size: 21px;">
+      <div class="btn btn-light mobileTab" data-type="list" style="margin-top: 5px;margin-bottom: 5px;float: left;margin-left: 10px;margin-right: 10px;"><i class="fa-solid fa-bars" style="margin-right: 8px;"></i>Blocks</div>
+      <div class="btn btn-light mobileTab" data-type="notes" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;"><i class="fa-solid fa-file-lines" style="margin-right: 8px;"></i>Notes</div>
+      <div class="btn btn-light mobileTab" data-type="body" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;float: right;"><i class="fa-solid fa-child-reaching" style="margin-right: 8px;"></i>Body</div>
+    </div>
+    <div id="leftSide" style="display: none;width: 50%;">
+      <div id="listCol" style="width: 100%;display: inline-block;vertical-align: top;border-right: black solid 1px;padding-bottom: 10px;height: 50%;"> 
+        <div class="dropdown" style="background-color: lightgrey;">
+          <div class="dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: calc(100% - 85px);padding: 10px;padding-left: 20px;display: inline-block;cursor: pointer;">
+            <i id="listIcon" class="fa-solid fa-bars" style="margin-right: 10px;width: 14px; display: inline-block;"></i>
+            <span id="listTitle">Blocks by Surgery</span>
+          </div>
+          <div id="clear" class="btn btn-sm btn-light" style="display: inline-block;vertical-align: top;margin-top: 6px;">Clear
+            <i class="fa-solid fa-eraser" style="margin-left: 7px;"></i>
+          </div>
+          <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(5px, 44px, 0px); top: 0px; left: 0px; will-change: transform;">
+            <a class="dropdown-item active listOption" data-type="surgery" href="#">Blocks by Surgery</a>
+            <a class="dropdown-item listOption" data-type="location" href="#">Blocks by Location</a>
+            <a class="dropdown-item listOption" data-type="custom" href="#">Block Combinations</a>
+            <a class="dropdown-item listOption" data-type="map" href="#">Blocks from Nerve Maps</a>
+          </div>
+        </div>
+        <div style="overflow-y: scroll;height: calc(100% - 34px);">
+          <div id="mapSection">
+            <div>
+              <h5 style="margin-top: 10px;margin-left: 10px;display: inline-block;margin-right: 5px;vertical-align: top;">Map</h5>
+              <select class="form-control" style="width: calc(100% - 70px);display: inline-block;margin: 5px;">
+                <option>Brachial Plexus</option>
+              </select>
+            </div>
+            <h5 id="mapTitle" style="padding-left: 10px;padding-right: 10px;text-align: center;padding-top: 10px;">Click or hover over a spot to block</h5>
+            <div style="position: relative;width: calc(100% - 20px);margin-left: 10px;">
+              <div>
+                <div class="mapSpot" data-block="isb" style="width: 1.5%;height: 37%;border-radius: 4px;left: 68%;top: 20%;transform: rotate(348deg);"></div>
+                <div class="mapSpot" data-block="supraclavicular" style="width: 1.5%;height: 37%;border-radius: 4px;left: 58%;top: 26%;transform: rotate(337deg);"></div>
+                <div class="mapSpot" data-block="infraclavicular" style="width: 1.5%;height: 33%;border-radius: 4px;left: 50%;top: 36%;transform: rotate(326deg);"></div>
+                <div class="mapSpot" data-block="axillary" style="width: 3%;height: 4%;border-radius: 4px;left: 38%;top: 59%;"></div>
+                <div class="mapSpot" data-block="radial" style="width: 3%;height: 4%;border-radius: 4px;left: 39%;top: 64%;"></div>
+                <div class="mapSpot" data-block="ulnar" style="width: 3%;height: 4%;border-radius: 4px;left: 31%;top: 79%;"></div>
+                <div class="mapSpot" data-block="median" style="width: 3%;height: 4%;border-radius: 4px;left: 26%;top: 76%;"></div>
+              </div>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Brachial_plexus_2.svg/1920px-Brachial_plexus_2.svg.png" style="width: calc(100% - 20px);border: black 1px solid;border-radius: 10px;margin-top: 5px;margin-left: 10px;margin-right: 10px;margin-bottom: 5px;">
+            </div>
+          </div>
+          <div id="locationSection" style="display: none;">
+            <p style="margin-top: 5px; text-align: center; margin-left: 10px; margin-right: 10px;">Click on the body to see block options</p>
+          </div>
+          <div id="surgerySection" style="display: none;">
+            <input id="surgerySearch" class="form-control" placeholder="Surgery Search" style="margin: 5px;display: inline-block;">
+          </div>
+          <div id="customBlockSection" style="display: none;">
+            <input id="blockSearch" class="form-control" placeholder="Block Search" style="margin: 5px;display: inline-block;">
+          </div>
+          <div id="dataList"></div>
+        </div>
+      </div><div id="notesCol" style="width: 100%;display: inline-block;vertical-align: top;border-right: black solid 1px;height: 50%;"> 
+        <div id="notesTop" style="width: 100%;background-color: lightgrey;padding: 10px;">
+          <i class="fa-solid fa-file-lines" style="margin-right: 10px;width: 14px; display: inline-block"></i>Notes
+        </div>
+        <div id="blockNotes" style="user-select: text;width: 100%;display: inline-block;padding: 10px;overflow-y: scroll;height: calc(100% - 44px);"></div>
+      </div>
+    </div><div id="bodyCol" style="width: 34%; display: none; vertical-align: top;"> 
+      <div id="bodyTop" style="width: 100%;background-color: lightgrey;padding: 10px; cursor: pointer;">
+        <i class="fa-solid fa-child-reaching" style="margin-right: 10px;width: 14px; display: inline-block"></i>Body Map
+      </div>
+      <div id="bodyMain" style="width: calc(100% - 10px);position: relative;display: inline-block;border: black 1px solid;border-radius: 10px;padding: 5px;height: calc(100% - 55px);margin-top: 5px;margin-left: 5px;">
+        <div style="position: absolute; top: 5px; left: 5px; width: 100px;">
+          <i id="flipBody" data-toggle="tooltip" title="Flip" data-placement="bottom" class="fa-solid fa-repeat" style="display: inline-block; font-size: 20px; padding: 5px; cursor: pointer; margin-right: 0px;"></i>
+          <i id="expandBody" data-toggle="tooltip" title="Expand" data-placement="bottom" class="fa-solid fa-up-right-and-down-left-from-center" style="display: inline-block; font-size: 20px; padding: 5px; cursor: pointer;"></i>
+        </div>
+        <div style="border-left: 1px black solid;position: absolute;top: 0px;right: 0px;width: 45px;border-bottom-left-radius: 10px;border-bottom: 1px black solid;">
+          <i data-toggle="tooltip" title="" data-placement="left" class="skinBody fa-solid fa-face-meh" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;color: #0a5da2;width: 44px;" data-original-title="Skin Layer"></i>
+          <i data-toggle="tooltip" title="" data-placement="left" class="boneBody fa-solid fa-bone" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;width: 44px;" data-original-title="Bone Layer"></i>
+          <i data-toggle="tooltip" title="" data-placement="left" class="muscleBody fa-solid fa-dumbbell" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;width: 44px;" data-original-title="Muscle Layer"></i>
+        </div>
+        <!-- <i class="fa-solid fa-circle-dot" style="position: absolute; left: 65%; top: 20%; color: black;"></i> -->
+        <div id="front" style="display: inline-block; width: 100%; height: 100%;">
+          <!-- <%- include ("./res/svg/bodymapFront.svg") %> -->
+        </div>
+        <div id="back" style="display: none; width: 100%; height: 100%;">
+          <!-- <%- include ("./res/svg/bodymapBack2.svg") %> -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bodyModal" data-backdrop="static" data-keyboard="false" class="modal fade" role="dialog" style="overflow: hidden">
+    <div class="modal-dialog modal-lg" style="overflow-y: initial !important;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 style="display: inline-block; margin-bottom: 0px; margin-top: 0px; width: calc(100% - 20px);">Full Body Map</h4>
+          <span id="editTextModalClose" data-dismiss="modal" class="fa-solid fa-down-left-and-up-right-to-center" style="cursor: pointer;float: right;font-size: 20px;margin-top: 4px;"></span>
+        </div>
+        <div class="modal-body" style="text-align: center; display: inline-block; padding-top: 15px; width: 100%; overflow-y: scroll; max-height: 624px;">
+          <div id="expandedBox">
+            <div style="border-left: 1px black solid;position: absolute;top: 0px;right: 0px;width: 45px;border-bottom-left-radius: 10px;border-bottom: 1px black solid;">
+              <i data-toggle="tooltip" title="" data-placement="left" class="skinBody fa-solid fa-face-meh" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;color: #0a5da2;width: 44px;" data-original-title="Skin Layer"></i>
+              <i data-toggle="tooltip" title="" data-placement="left" class="boneBody fa-solid fa-bone" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;width: 44px;" data-original-title="Bone Layer"></i>
+              <i data-toggle="tooltip" title="" data-placement="left" class="muscleBody fa-solid fa-dumbbell" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;width: 44px;" data-original-title="Muscle Layer"></i>
+            </div>
+            <div id="fullFront" style="display: inline-block;height: 700px;">
+              <!-- <%- include ("./res/svg/bodymapFront.svg") %> -->
+            </div>
+            <div id="fullBack" style="display: inline-block;height: 700px;">
+              <!-- <%- include ("./res/svg/bodymapBack2.svg") %> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    var state = {
+      pane: 'body',
+      bodySide: 'front',
+      listType: 'custom'
+    }
+    if (localStorage.getItem('state') != null) state = JSON.parse(localStorage.getItem('state'));
+    var saveState = function() {
+      localStorage.setItem('state', JSON.stringify(state));
+    };
+
+    // var pane = 'body'; // body, notes, list
+    var panes = 'three';
+    // var bodySide = 'front'; // front, back
+    // var listType = 'custom'; // surgery, location, custom, map
+
+    var mapClickBlock = null;
+    var mapHoverBlock = null;
+
+    var selected = 0;
+    var dataList = [{
+      type: 'block',
+      names: ['axillary']
+    }];
+
+    var namedSections = {
+      'f_radSup': 'front,path6027',
+      'f_med': 'front,path5988',
+      'f_ulnar': 'front,path5949',
+      'f_msc': 'front,path5596',
+      'f_radInfLat': 'front,path5557',
+      'f_medAbc': 'front,path5518',
+      'f_bracCut': 'front,path5479',
+      'f_icb': 'front,path5440',
+      'f_aslp': 'front,path5401',
+      'f_supClav': 'front,path5362',
+
+      'f_Vcran': 'front,path15082',
+      'f_C2': 'front,path15121',
+      'f_C3': 'front,path3033',
+      'f_C4med2': 'front,path15932',
+      'f_C4med': 'front,path16010',
+      'f_C4lat': 'front,path15971',
+      'f_C5': 'front,path15854',
+      'f_C6': 'front,path15815',
+      'f_C7': 'front,path15076',
+      'f_C8': 'front,path15737',
+      'f_T1': 'front,path15776',
+      'f_T2': 'front,path15893',
+
+      'f_rect': 'front,path1541',
+
+      'b_medAbc': 'back,path10344',
+      'b_latAbc': 'back,path10305',
+      'b_ulnar': 'back,path10266',
+      'b_med1': 'back,path10227',
+      'b_med2': 'back,path10188',
+      'b_med3': 'back,path10149',
+      'b_med4': 'back,path2281-4-8',
+      'b_radSup': 'back,path10071',
+      'b_bracCut': 'back,path10383',
+      'b_icb': 'back,path10422',
+      'b_aslp': 'back,path10500',
+      'b_supClav': 'back,path17713',
+
+      'b_T2': 'back,path5476',
+      'b_T1': 'back,path5358',
+      'b_C8': 'back,path5280',
+      'b_C7': 'back,path5319',
+      'b_C6': 'back,path5241',
+      'b_C5': 'back,path5515',
+      'b_C4': 'back,path3160',
+      'b_C3': 'back,path3236'
+    };
+
+    var blocks = {
+      'isb': {
+        name: 'Interscalene Block (ISB)',
+        notes: '',
+        coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6' ]
+      }, 
+      'supraclavicular': {
+        name: 'Supraclavicular Block',
+        notes: '<b>Sensory Coverage:</b> C5-T1 trunks<br><br>'+
+        '<b>Description:</b> A versatile upper extremity block which provides surgical anesthesia below the shoulder at the level of the trunks. Works well for elbow and hand surgery.<br><br>'+
+        '<b>Indications:</b> Surgery of the upper extremity distal to the proximal humerus. Consider adding an intercostobrachial nerve block for medial arm coverage.<br><br>'+
+        '<b>Common Surgeries:</b> Distal Humerus fracture, Forearm surgery, Wrist Surgery, Arterio-Venous Fisula<br><br>'+
+        '<b>Contraindications:</b> Patient refusal, coagulopathy, COPD (relative), bilateral upper extremity surgery (relative)<br><br>'+
+        '<b>Complications:</b> Pneumothorax (highest risk), phrenic nerve block causing diaphragmatic paralysis (50%), Horner Syndrome, intravascular injection, noncompressible hematoma',
+        coverage: [ 'f_C5', 'f_C6', 'f_C7', 'b_C5', 'b_C6', 'b_C7' ],
+      }, 
+      'infraclavicular': {
+        name: 'Infraclavicular Block',
+        notes: '',
+        coverage: [ 'f_C7', 'f_C8', 'b_C7', 'b_C8' ]
+      }, 
+      'axillary': {
+        name: 'Axillary Block',
+        notes: '',
+        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
+      },
+      'scp': {
+        name: 'Superficial Cervical Plexus Block (SCP)',
+        notes: '',
+        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
+      },
+      'radial': {
+        name: 'Radial Block',
+        notes: '',
+        coverage: [ 'f_radSup', 'f_radInfLat', 'b_radSup' ]
+      },
+      'ulnar': {
+        name: 'Ulnar Block',
+        notes: '',
+        coverage: [ 'b_ulnar', 'f_ulnar' ]
+      },
+      'median': {
+        name: 'Median Block',
+        notes: '',
+        coverage: [ 'f_med', 'b_med1', 'b_med2', 'b_med3', 'b_med4' ]
+      },
+      'intercostobracial': {
+        name: 'Intercostobrachial Block',
+        notes: '',
+        coverage: [ 'f_icb', 'b_icb' ]
+      },
+      'rectusSheath': {
+        name: 'Rectus Sheath Block',
+        notes: '',
+        coverage: [ 'f_rect']
+      }
+    };
+
+    var surgeries = [{
+      name: 'Clavicle Fracture',
+      notes: '',
+      blocks: [
+        ['scp', 'isb']
+      ]
+    }, {
+      name: 'Total or Partial Shoulder',
+      notes: '',
+      blocks: [
+        ['isb']
+      ]
+    }];
+
+    var middle = 500;
+    var flip = {
+      'front': 336.5,
+      'back': 117
+    }
+    var defaultSides = {
+      'front,layer10': 'right', // Front Dermatome
+      'front,layer9': 'left', // Front Cutaneous nerves
+      'back,layer10': 'right', // Back Dermatome
+      'back,layer9': 'left' // Back Cutaneous nerves
+    };
+
+    var getProp = function(that, prop) {
+      return $(that).closest('[data-'+prop+']').attr('data-'+prop);
+    };
+
+    var setMaxHeight = function(element) {
+      var headerBox = $(element+' .modal-header').length != 0 ? $(element+' .modal-header')[0].getBoundingClientRect() : {height: 0, top: 0};
+      var footerBox = $(element+' .modal-footer').length != 0 ? $(element+' .modal-footer')[0].getBoundingClientRect() : {height: 20};
+      var maxHeight = $(element+'').height() - (Math.max(headerBox.top, 10) + headerBox.height + footerBox.height + 20);
+      $(element+' .modal-body').css('max-height', maxHeight);
+    };
+
+    var showBlock = function(list, side, opts) {
+      opts = opts || {};
+      var fill = opts.color == null ? 'green' : opts.color;
+
+      list.map(function(name) {
+        var hash = namedSections[name] != null ? namedSections[name] : name;
+        var mainGroup = hash.split(',')[0];
+        var id = hash.split(',')[1];
+
+        ({'front': ['front', 'fullFront'],
+          'back': ['back', 'fullBack']
+        })[mainGroup].map(function(group) {
+          var el = $('#' + group).find('#' + id);
+          var parent = el.parent().attr('id');
+          var originalSide = defaultSides[mainGroup+','+parent];
+          
+          if (el.length == 0) {
+            console.log(id, 'no longer exists')
+            return;
+          }
+
+          if (originalSide == side) {
+            el.css('visibility', '').css('fill', fill);
+          } else {
+            var flipped = $(el[0].outerHTML);
+            flipped.attr('id', 'flip_' + id);
+            flipped.css('visibility', '').css('fill', fill);
+
+            var newParent = $('<g class="flip">'); //  transform="scale (-1, 1)" transform-origin="800px, 0px"
+            newParent.append(flipped);
+            newParent.css('transform-origin', flip[mainGroup] + 'px 0px').css('transform', 'scale(-1, 1)')
+            $('#' + group).find('#' + parent).append(newParent);
+          }
+        });
+      });
+
+      // reloadSVG();
+      // $('#front>svg').html($('#front>svg').html())
+    };
+
+    var reloadSVG = function() {
+      $('#front').html($('#front').html());
+      $('#fullFront').html($('#fullFront').html());
+      $('#back').html($('#back').html());
+      $('#fullBack').html($('#fullBack').html());
+      refreshEvents();
+    };
+
+    var alreadyShown = {};
+
+    // Draw a circle where clicked
+    var locationPt = null;
+
+    var refreshEvents = function() {
+      // Reverse lookup / paint
+      ['front', 'back'].map(function(group) {
+        $('#'+group+' > svg').on('mousedown', function(e) {
+          var svg = this;
+
+          var mainPt = svg.createSVGPoint();
+          mainPt.x = e.clientX;
+          mainPt.y = e.clientY;
+
+          var xFrameShift = e.clientX - e.offsetX;
+          var middle = $(svg).width()/2;
+
+          var flipPt = null;
+          if (flip[group] != null) {
+            flipPt = svg.createSVGPoint();
+            flipPt.x = middle - (e.offsetX - middle) + xFrameShift;
+            flipPt.y = e.clientY;
+          }
+
+          console.log(mainPt, flipPt)
+
+          var side = 'left';
+          if (group == 'front') side = e.offsetX > middle ? 'right' : 'left';
+          else if (group == 'back') side = e.offsetX > middle ? 'right' : 'left';
+
+          var contains = {};
+          $(svg).find('path').each(function(i, path) {
+            var parentEl = $(path).closest('g');
+            if (parentEl.hasClass('flip')) return;
+
+            var checkPt = function(pt) {
+              var newPt = pt.matrixTransform(path.getScreenCTM().inverse());
+              var inside = path.isPointInFill(newPt);
+              var parent = parentEl.attr('id');
+              var id = $(path).attr('id');
+              if (inside && ['layer9', 'layer10'].indexOf(parent) >= 0) {
+                var reverseName = '';
+                for (var name in namedSections) if (namedSections[name] == group + ',' + id) reverseName = name;
+                // console.log(reverseName != '' ? reverseName : id);
+                contains[reverseName != '' ? reverseName : group + ',' + id] = side;
+              }
+            }
+
+            checkPt(mainPt);
+            if (flipPt != null) checkPt(flipPt);
+          });
+
+          state.listType = 'location';
+
+          // if (state.listType == 'location') {
+            $('.locPt').remove();
+            var actualPt = mainPt.matrixTransform(svg.getScreenCTM().inverse());
+            $('#'+group + '> svg').append($('<circle stroke="black" fill="yellow" class="locPt" cx="'+actualPt.x+'" cy="'+actualPt.y+'" r="3"/>'))
+
+            dataList = [];
+            for (var blockName in blocks) {
+              if (blocks[blockName].coverage.some(function(pathName) {
+                return contains[pathName] != null;
+              })) {
+                dataList.push({
+                  type: 'block',
+                  names: [blockName]
+                });
+              }
+            }
+            if (dataList.length > 0) selected = 0;
+          // }
+
+          // console.log('all contains', contains);
+          // for (var name in contains) {
+          //   if (!!alreadyShown[name + ':' + contains[name]]) continue;
+          //   alreadyShown[name + ':' + contains[name]] = true;
+          //   console.log('painting', name);
+          //   showBlock([name], contains[name]);
+          //   break;
+          // }
+
+          refresh();
+          // reloadSVG();
+        });
+      });
+    };
+
+    var surgerySearchBox = null;
+    var blockSearchBox = null;
+
+    var refresh = function() {
+      $('.flip').remove();
+      alreadyShown = {};
+
+      $('#listTitle').text(({
+        'surgery': 'Blocks by Surgery',
+        'location': 'Blocks by Location',
+        'custom': 'Block Combinations',
+        'map': 'Blocks from Nerve Maps'
+      })[state.listType]);
+      $('.listOption').removeClass('active').unbind('click').click(function() {
+        state.listType = getProp(this, 'type');
+        dataList = [];
+        saveState();
+        refresh();
+      });
+      $('.listOption[data-type="'+state.listType+'"]').addClass('active');
+      $('#surgerySection').toggle(state.listType == 'surgery');
+      $('#mapSection').toggle(state.listType == 'map');
+      $('#customBlockSection').toggle(state.listType == 'custom');
+      $('#locationSection').toggle(state.listType == 'location' && dataList.length == 0);
+
+      if (state.listType != 'location') $('.locPt').remove();
+
+      $('#back').toggle(state.bodySide == 'back');
+      $('#front').toggle(state.bodySide == 'front');
+      $('#flipBody').unbind('click').click(function() {
+        state.bodySide = state.bodySide == 'back' ? 'front' : 'back';
+        saveState();
+        refresh();
+      });
+
+      $('#expandBody').unbind('click').click(function() {
+        $('#bodyModal').modal({ backdrop: 'static', keyboard: false, show: true });
+        setTimeout(function() {
+          setMaxHeight('#bodyModal');
+          updateLayout();
+        }, 200);
+      });
+
+      $('.mobileTab').removeClass('btn-secondary').addClass('btn-light').unbind('click').click(function() {
+        state.pane = getProp(this, 'type');
+        saveState();
+        refresh();
+        updateLayout();
+      });
+      $('.mobileTab[data-type="'+state.pane+'"]').addClass('btn-secondary').removeClass('btn-light')
+
+      $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
+        $(n).css('visibility', 'hidden');
+      });
+
+      $('#dataList').toggle(state.listType != 'map');
+      $('#dataList').empty();
+      dataList.map(function(item, i) {
+        var isSelected = i == selected;
+        if (item.type == 'surgery') {
+          var data = surgeries[item.name];
+          $('#dataList').append($(''+
+`<div class="dataRow" data-type="surgery" data-index="${i}" style="user-select: text; padding: 6px;background-color: #0e5da4;border-radius: 5px;margin: 5px;color: white; cursor: pointer;border: ${isSelected ? 'black' : 'white'} solid 2px;">
+  ${panes == 'one' ? ''+
+  `<i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>` : 
+  `<i class="fa-solid fa-magnifying-glass" style="float: right; margin-right: 5px; margin-top: 3px;"></i>` }
+  <i class="removeData fa-solid fa-xmark" style="margin-right: 7px; margin-left: 4px;"></i>
+  <span>Surgery: ${data.name}</span>
+</div>`));
+        } else if (item.type == 'block') {
+          $('#dataList').append($(''+
+`<div class="dataRow" data-type="block" data-index="${i}" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px;cursor: pointer;border: ${isSelected ? '#125da6' : 'white'} solid 2px;">
+  ${panes == 'one' ? ''+
+  `<i class="fa-solid fa-child-reaching bodyJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>
+   <i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>` : 
+  `<i class="fa-solid fa-arrow-right" style="float: right; margin-right: 5px; margin-top: 3px;"></i>` }
+  <i class="removeData fa-solid fa-xmark" style="margin-right: 7px; margin-left: 4px;"></i>
+  <span>${item.names.map(function(blockName) {
+    return blocks[blockName].name;
+  }).join(' + ')}</span>
+</div>`));
+        }
+      });
+      
+      $('.dataRow').unbind('click').click(function() {
+        var index = getProp(this, 'index');
+        if (index == selected) selected = null;
+        else selected = index;
+        refresh();
+      });
+
+      $('.removeData').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        dataList.splice(index, 1);
+        selected = null;
+        refresh();
+      });
+
+      $('.notesJump').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        selected = index;
+        state.pane = 'notes';
+        saveState();
+        updateLayout();
+        refresh();
+      });
+
+      $('.bodyJump').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        selected = index;
+        state.pane = 'body';
+        saveState();
+        updateLayout();
+        refresh();
+      });
+
+      var item = null;
+      if (state.listType == 'map') {
+        var focusId = mapHoverBlock || mapClickBlock;
+        $('#mapTitle').text('Click or hover over a spot to block');
+        if (focusId != null) {
+          item = { type: 'block', names: [focusId] };
+          var data = blocks[focusId];
+          if (data != null) $('#mapTitle').text(data.name);
+        }
+      } else if (dataList[selected] != null) item = dataList[selected];
+
+      $('.mapSpot').removeClass('active');
+      $('.mapSpot[data-block="'+mapClickBlock+'"]').addClass('active');
+
+      var notes = '<h6>Pick a block or surgery to see notes related to it.</h6>';
+      if (item != null) {
+        if (item.type == 'surgery') {
+          var data = surgeries[item.name];
+          notes = '<h5>'+data.name+'</h5><p>'+data.notes+'</p>';
+        } else if (item.type == 'block') {
+          notes = item.names.map(function(blockName) {
+            var data = blocks[blockName];
+            if (data == null) return '';
+            return '<h5>'+data.name+'</h5><p>'+((data.notes || '').trim().length == 0 ? 'No notes yet' : data.notes)+'</p>';
+          }).join('');
+        }
+      }
+      $('#blockNotes').html(notes);
+
+      var backgroundBlocks = {};
+      var selectedBlocks = {};
+
+      dataList.map(function(item, i) {
+        if (item.type != 'block') return;
+        var isSelected = i == selected;
+        if (isSelected) {
+          item.names.map(function(blockName) {
+            selectedBlocks[blockName] = true;
+          })
+        } else if (state.listType == 'custom') {
+          item.names.map(function(blockName) {
+            backgroundBlocks[blockName] = true;
+          });
+        }
+      });
+
+      $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
+        $(n).css('visibility', 'hidden');
+        $(n).css('fill', 'grey');
+      });
+
+      if (state.listType == 'map') {
+        if (mapClickBlock != null && mapHoverBlock != null && mapClickBlock != mapHoverBlock && blocks[mapClickBlock] != null) {
+          showBlock(blocks[mapClickBlock].coverage, 'left', { color: 'grey' });
+          showBlock(blocks[mapClickBlock].coverage, 'right', { color: 'grey' });
+        }
+
+        var focusId = mapHoverBlock || mapClickBlock;
+        var focusData = blocks[focusId];
+        if (focusData != null) {
+          showBlock(data.coverage, 'left', { color: '#055da0' });
+          showBlock(data.coverage, 'right', { color: '#055da0' });
+        }
+      } else {
+        for (var blockName in backgroundBlocks) {
+          showBlock(blocks[blockName].coverage, 'left', { color: 'grey' });
+          showBlock(blocks[blockName].coverage, 'right', { color: 'grey' });
+        }
+        for (var blockName in selectedBlocks) {
+          showBlock(blocks[blockName].coverage, 'left', { color: '#055da0' });
+          showBlock(blocks[blockName].coverage, 'right', { color: '#055da0' });
+        }
+      }
+
+      // $('#front, #back').find('#layer10, #layer9').children().each(function(i, n) {
+      //   $(n).css('visibility', '');
+      //   $(n).css('fill', 'grey');
+      // });
+      // showBlock(['back,path15628'], 'left');
+      // showBlock(['back,path15628'], 'right', { color: 'grey' });
+
+      if (blockSearchBox != null) {
+        blockSearchBox.list = _.toPairs(blocks).map(function(pair) {
+          return { name: pair[0], label: pair[1].name };
+        });
+      }
+
+      if (surgerySearchBox != null) {
+        surgerySearchBox.list = surgeries.map(function(data, surgery_i) {
+          return { name: surgery_i, label: data.name };
+        });
+      }
+
+      reloadSVG();
+    };
+
+    var updateLayout = function() {
+      var width = $(document).innerWidth();
+      var oldPanes = panes;
+      panes = width > 1100 ? 'three' : width > 615 ? 'two' : 'one';
+      if (panes != oldPanes) refresh();
+      $('#mobileTop').toggle(panes == 'one');
+      $('#leftSide, #listCol, #notesCol, #bodyCol, #listIcon, #bodyTop, #notesTop').css('display', panes != 'one' ? 'inline-block' : 'none');
+      if (panes == 'three') { // Three Pane
+        $('#leftSide').css('width', '66%');
+        $('#listCol, #notesCol').css('width', '50%');
+        $('#bodyCol').css('width', '34%');
+        $('#leftSide, #listCol, #notesCol, #bodyCol').css('height', '100%')
+      } else if (panes == 'two') { // Two Pane
+        $('#leftSide, #bodyCol').css('width', '50%').css('height', '100%')
+        $('#listCol, #notesCol').css('width', '100%').css('height', '50%')
+      } else if (panes == 'one') { // One Pane
+        $('#listCol, #notesCol, #bodyCol').css('width', '100%');
+        $('#listCol, #notesCol').css('height', '100%')
+        $('#bodyCol').css('height', 'calc(100% - 60px)')
+        $('#leftSide').css('width', '100%').css('height', 'calc(100% - 70px)').toggle(state.pane != 'body');
+        $('#listCol').toggle(state.pane == 'list');
+        $('#notesCol').toggle(state.pane == 'notes');
+        $('#bodyCol').toggle(state.pane == 'body');
+      }
+      $('#blockNotes').css('height', panes == 'one' ? '100%' : 'calc(100% - 44px)');
+      $('#bodyMain').css('height', panes == 'one' ? '100%' : 'calc(100% - 55px)');
+
+      if ($('#bodyModal').is(':visible')) {
+        var modalWidth = $('#bodyModal').find('.modal-body').innerWidth();
+        var modalHeight = $(window).innerHeight() - 170;
+        $('#fullFront').css('width', (modalWidth - 50) / 2).css('height', modalHeight);
+        $('#fullBack').css('width', (modalWidth - 50) / 2).css('height', modalHeight);
+      }
+    };
+    $(window).on('resize', function() {
+      updateLayout();
+      setMaxHeight('#bodyModal');
+    });
+    updateLayout();
+
+    $(function() {
+      $('#bodyTop').click(function() {
+        $('.flip').remove();
+        $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
+          $(n).css('visibility', '');
+          $(n).css('fill', '#055da0');
+        });
+      })
+
+      $('#clear').click(function() {
+        dataList = [];
+        refresh();
+      });
+
+      var addToList = function(item) {
+        if (dataList.every(function(other) {
+          return !(other.type == item.type && other.name == item.name && (other.names || []).join(',') == (item.names || []).join(','));
+        })) dataList.push(item);
+      };
+
+      $('.mapSpot').unbind('click').click(function() {
+        var block = getProp(this, 'block');
+        if (mapClickBlock == block) mapClickBlock = null;
+        else mapClickBlock = block;
+        refresh();
+      });
+
+      $('.mapSpot').mouseenter(function() {
+        var block = getProp(this, 'block');
+        mapHoverBlock = block;
+        refresh();
+      }).mouseleave(function() {
+        mapHoverBlock = null;
+        refresh();
+      });
+
+      surgerySearchBox = new Awesomplete($('#surgerySearch')[0], {
+        list: [], minChars: 0, autoFirst: true, maxItems: 8,
+        data: function(item) {
+          return { label: item.label, value: item };
+        }
+      });
+      surgerySearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
+        $('#surgerySearch').val('');
+        var value = data.text.value;
+        var data = surgeries[value.name];
+        
+        selected = dataList.length;
+        addToList({ type: 'surgery', name: value.name  });
+        data.blocks.map(function(blockNames) {
+          addToList({
+            type: 'block',
+            names: blockNames
+          });
+        });
+        if (selected >= dataList.length) selected = dataList.length - 1;
+
+        refresh();
+      });
+
+      blockSearchBox = new Awesomplete($('#blockSearch')[0], {
+        list: [], minChars: 0, autoFirst: true, maxItems: 8,
+        data: function(item) {
+          return { label: item.label, value: item };
+        }
+      });
+      blockSearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
+        $('#blockSearch').val('');
+        var value = data.text.value;
+        var data = blocks[value.name];
+
+        selected = dataList.length;
+        addToList({ type: 'block', names: [value.name] });
+        if (selected >= dataList.length) selected = dataList.length - 1;
+
+        refresh();
+      });
+
+      $('[data-toggle="tooltip"]').tooltip();
+
+      $('#surgerySearch, #blockSearch').parent().css('width', 'calc(100% - 10px)');
+      $('#surgerySearch, #blockSearch').parent().find('ul').css('margin-left', '5px');
+
+      $.ajax({
+        url: './res/svg/bodymapFront.svg',
+        type: "GET",
+        contentType: "text/plain",
+        success: function(a, b, data1) {
+          $('#fullFront, #front').html(data1.responseText);
+          $.ajax({
+            url: './res/svg/bodymapBack2.svg',
+            type: "GET",
+            contentType: "text/plain",
+            success: function(a, b, data2) {
+              $('#fullBack, #back').html(data2.responseText);
+
+              $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').show().children().each(function(i, n) {
+                $(n).css('visibility', '');
+                $(n).css('fill', 'grey');
+              });
+              refresh();
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
