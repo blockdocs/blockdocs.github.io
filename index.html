@@ -26,7 +26,7 @@
     .mapSpot:hover {
       border: #0998a8 solid 2px;
     }
-    .mapSpot.active {
+    .mapSpot.active {in
       border: #0998a8 solid 2px;
       background-color: #0998a8;
     }
@@ -227,13 +227,60 @@
       'b_C6': 'back,path5241',
       'b_C5': 'back,path5515',
       'b_C4': 'back,path3160',
-      'b_C3': 'back,path3236'
+      'b_C3': 'back,path3236',
+
+      'f_latFemC': 'front,path12743',
+      'f_antFemC': 'front,path12782',
+      'f_genFem': 'front,path12821',
+      'f_ilioIng': 'front,path2750',
+      'f_ilioHypoGas': 'front,path2789',
+      'f_obt': 'front,path12938',
+      'f_saph': 'front,path4909',
+      'f_supPer': 'front,path4870',
+      'f_deepPer': 'front,path4755',
+      'f_sural': 'front,path4831',
+      'f_latCutCalf': 'front,path13133',
+      'f_triOpht': 'front,path13523',
+      'f_triMax': 'front,path13484',
+      'f_triMand': 'front,path13445',
+
+      'b_tib': 'back,path8306',
+      'b_medCut': 'back,path12119',
+      'b_sural': 'back,path8384',
+      'b_supPer': 'back,path12080',
+      'b_medCut': 'back,path7070',
+      'b_obt': 'back,path11963',
+      'b_saph': 'back,path8345',
+      'b_postFemCut': 'back,path7187',
+      'b_latFemC': 'back,path11692',
+
+      'b_medPlant_foot': 'back,path13640-3',
+      'b_latPlant_foot': 'back,path13601-1',
+      'b_latPlant2_foot': 'back,path13796-0',
+      'b_medCut_foot': 'back,path13679-8',
+      'b_saph_foot': 'back,path13718-4',
+      'b_tib_foot': 'back,path13757-8',
+      'b_sural_foot': 'back,path13835-4'
     };
 
+    var noteTemp = '<b>Sensory Coverage:</b><br><br>'+
+          '<b>Description:</b><br><br>'+
+          '<b>Indications:</b><br><br>'+
+          '<b>Common Surgeries:</b><br><br>'+
+          '<b>Contraindications:</b><br><br>'+
+          '<b>Complications:</b><br><br>'+
+          '<b>Dosing:</b><br><br>';
+
     var blocks = {
+      // Brachial Plexus
       'isb': {
         name: 'Interscalene Block (ISB)',
-        notes: '',
+        notes: '<b>Sensory Coverage:</b> C5-C7 roots/superior trunk<br><br>'+
+        '<b>Description:</b> An upper brachial plexus block at the level of the upper roots and superior trunk. Best employed for surgery proximal to the mid humerus, as lower (C8 and T1) roots/inferior trunk are rarely covered<br><br>'+
+        '<b>Indications:</b> Surgery of the shoulder, proximal humerus, lateral two-thirds of the clavicle. Consider performing a cervical plexus block and intercostobrachial nerve block in addition to ISB for primary surgical anesthesia of the shoulder and for clavicle inhury and surgery<br><br>'+
+        '<b>Common Surgeries:</b> Rotator Cuff Repair, Acromioplasty, Humerus fracture, Clavicular Fracture, Bankart\'s Repair, Laterjet, Proximal Humerus osteosynthesis, acromioclavicular resection, shoulder dislocation<br><br>'+
+        '<b>Contraindications:</b> Patient refusal, coagulopathy, COPD (relative), contralateral pneumonectomy or significant pleural effusion, contralateral diaphragmatic or phrenic nerve injury<br><br>'+
+        '<b>Complications:</b><br> Total spinal anesthesia, epidural anesthesia, cervical spinal cord injection, vertebral artery injection, pneumothorax, phrenic nerve paralysis (100%), recurrent laryngeal nerve paralysis, Horner\'s syndrome<br><br>',
         coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6' ]
       }, 
       'supraclavicular': {
@@ -248,12 +295,23 @@
       }, 
       'infraclavicular': {
         name: 'Infraclavicular Block',
-        notes: '',
+        notes: '<b>Sensory Coverage:</b><br><br>'+
+          '<b>Description:</b><br><br>'+
+          '<b>Indications:</b><br><br>'+
+          '<b>Common Surgeries:</b><br><br>'+
+          '<b>Contraindications:</b><br><br>'+
+          '<b>Complications:</b><br><br>',
         coverage: [ 'f_C7', 'f_C8', 'b_C7', 'b_C8' ]
       }, 
       'axillary': {
         name: 'Axillary Block',
-        notes: '',
+        notes: '<b>Sensory Coverage:</b><br><br>'+
+          '<b>Description:</b><br><br>'+
+          '<b>Indications:</b><br><br>'+
+          '<b>Common Surgeries:</b><br><br>'+
+          '<b>Contraindications:</b><br><br>'+
+          '<b>Complications:</b><br><br>'+
+          '<b>Dosing:</b><br><br>',
         coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
       },
       'scp': {
@@ -261,44 +319,157 @@
         notes: '',
         coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
       },
+      // 'intercostobracial': {
+      //   name: 'Intercostobrachial Block',
+      //   notes: '',
+      //   coverage: [ 'f_icb', 'b_icb' ]
+      // },
+
+      // Wrist
       'radial': {
         name: 'Radial Block',
         notes: '',
         coverage: [ 'f_radSup', 'f_radInfLat', 'b_radSup' ]
-      },
-      'ulnar': {
-        name: 'Ulnar Block',
-        notes: '',
-        coverage: [ 'b_ulnar', 'f_ulnar' ]
       },
       'median': {
         name: 'Median Block',
         notes: '',
         coverage: [ 'f_med', 'b_med1', 'b_med2', 'b_med3', 'b_med4' ]
       },
-      'intercostobracial': {
-        name: 'Intercostobrachial Block',
+      'ulnar': {
+        name: 'Ulnar Block',
         notes: '',
-        coverage: [ 'f_icb', 'b_icb' ]
+        coverage: [ 'b_ulnar', 'f_ulnar' ]
       },
+
+      // Lumbosacral Plexus
+      'lumbarPlexus': {
+        name: 'Lumbar Plexus Block (Psoas Block)',
+        notes: '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia to the anterolateral and medial thigh, the knee, and the medial leg. Combine with a Sciatic nerve block to achieve anesthesia of the entire lower extremity.<br><br>'+
+          '<b>Indications:</b> Surgery of the Knee, surgery of the anterior thigh, femoral head and neck fractures . <br><br>'+
+          '<b>Common Surgeries:</b> Femoral shaft and neck fractures, knee procedures, and procedures involving the anterior thigh<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis<br><br>'+
+          '<b>Complications:</b> Retroperitoneal hematoma, Vascular puncture of major vessels (aorta, IVC, etc), Intravascular injection, hemodynamic compromise (due to unilateral sympathectomy), Epidural injection, Intrathecal injection, Renal hematoma<br><br>'+
+          '<b>Dosing:</b> Consider 20-30cc of local anesthetic. 0.5-0.75% ropivacaine for surgical anesthesia with postoperative analgesia. <br><br>',
+        surgeries: 'Femoral shaft and neck fractures, knee procedures, and procedures involving the anterior thigh',
+        coverage: ['f_latFemC', 'f_antFemC', 'f_obt', 'f_saph', 'b_latFemC', 'b_obt', 'b_medCut', 'b_saph', 'b_tib', 'b_medCut_foot', 'b_saph_foot', 'b_tib_foot','b_medPlant_foot']
+      },
+      'sciatic': {
+        name: '(Proximal) Sciatic Nerve Block',
+        notes: '<b>Sensory Coverage:</b> Distal Portion of the Posterior Femur, All bones below the knee (except for the medial malleolus and medial tibial plateau)<br><br>'+
+          '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia for procedures between the mid-thigh to the knee..<br><br>'+
+          '<b>Indications:</b> Surgery of the distal upper leg and knee<br><br>'+
+          '<b>Common Surgeries:</b> Distal Femur ORIF, tibial plateau fracture, Tibial intramedullary nail, Below Knee Amputation (combined with Adductor Canal Block), Ankle ORIF (Combine with Distal Saphenous Block),  Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal),  Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with Distal Saphenous Block)<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, bedsore, <br><br>'+
+          '<b>Complications:</b> Hematoma, Infection, Post operative weakness leading to falls (due to hamstring weakness and/or foot drop)<br><br>'+
+          '<b>Dosing: Brown Atlas of Regional Anesthesia: 20-25cc of local anesthetic. Consider 1.5% bupivacaine or lidocaine if motor block is desired. 0.5% bupivacaine or 0.5-0.75% ropi for surgical anesthesia with postoperative analgesia</b><br><br>',
+        surgeries: 'Distal Femur ORIF, tibial plateau fracture, Tibial intramedullary nail, Below Knee Amputation (combined with Adductor Canal Block), Ankle ORIF (Combine with Distal Saphenous Block),  Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal),  Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with Distal Saphenous Block)',
+        coverage: ['f_supPer', 'f_deepPer', 'f_sural', 'f_latCutCalf', 'b_sural', 'b_supPer', 'b_postFemCut', 'b_sural_foot', 'b_latPlant_foot', 'b_latPlant2_foot']
+      },
+      'fib': {
+        name: '"3 in 1" Fascia Iliaca Nerve Block',
+        notes: '<b>Description:</b> A lower extremity block that results in anesthesia of the anterior and medial thigh (down to and including the knee) and anesthesia of the variable strip of skin on the medial leg and foot (saphenous nerve). <br><br>'+
+          '<b>Indications:</b> Surgery or fracture of the hip, thigh, or knee.<br><br>'+
+          '<b>Common Surgeries:</b> Hip fractures in adults, Hip Arthroscopy, Hip Arthroplasty, Hip ORIF, Acetabulum ORIF (pair with femoral and/or neuraxial), femoral fractures in children<br><br>'+
+          '<b>Contraindications:</b> Patient Refusal, severe coagulopathy, infection at block site, previous femoral bypass surgery, sepsis,allergy to local anesthetic<br><br>'+
+          '<b>Complications:</b> Small risk of hematomas in the injection site and low risk of local anesthetic toxicity. Case reports of pneumoretroperitoneum with continuous infusion, bladder puncture with a modified block under very special conditions, and postoperative neuropathy.<br><br>'+
+          '<b>Dosing: Large volume of local anesthetic needed, 20-40 cc of choice local anesthetic, 0.5-0.75% ropivacaine.Take caution not to exceed maximum dose ropivacaine 3 mg/kg.</b><br><br>',
+        surgeries: 'Hip fractures in adults, Hip Arthroscopy, Hip Arthroplasty, Hip ORIF, Acetabulum ORIF (pair with femoral and/or neuraxial), femoral fractures in children',
+        coverage: ['f_latFemC', 'f_antFemC', 'b_latFemC', 'b_postFemCut', 'f_saph', 'b_medCut', 'b_saph']
+      },
+      'fem': {
+        name: 'Femoral Nerve Block',
+        notes: '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia to the anterior thigh and knee.<br><br>'+
+          '<b>Indications:</b> Often used for postoperative analgesia after lower extremity surgery. May not produce adequate surgical anesthesia. <br><br>'+
+          '<b>Common Surgeries:</b> Anterior cruciate ligament repair, Total knee arthroplasty, patella surgery, quadriceps tendon repair. Acetabulum ORIF (pair with femoral and/or neuraxial), Femur, anterior thigh, and knee surgery, Femoral Shaft ORIF, Anterior Thigh Skin Graft,  Patellar ORIF, Patella Surgery<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis,  previous vascular grafting, local adenopathy, allergy to local anesthetic<br><br>'+
+          '<b>Complications:</b> Infection, Hematoma, Damage to the Femoral Nerve, Postoperative weakness, inability to bear weight postoperatively (significant quadriceps weakness)<br><br>'+
+          '<b>Technique:</b> Inject slightly inferior to the inguinal ligament, and the nerve is under the fascia iliaca.<br><br>'+
+          '<b>Dosing:</b> Moderate volume of local anesthetic, 15-20cc of 0,5% ropivacaine. <br><br>',
+        surgeries: 'Anterior cruciate ligament repair, Total knee arthroplasty, patella surgery, quadriceps tendon repair. Acetabulum ORIF (pair with femoral and/or neuraxial), Femur, anterior thigh, and knee surgery, Femoral Shaft ORIF, Anterior Thigh Skin Graft,  Patellar ORIF, Patella Surgery',
+        coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC']
+      },
+      'latFem': {
+        name: 'Lateral Femoral Cutaneous Nerve Block',
+        notes: '<b>Description:</b> A lower extremity block that is a useful adjunct to provide anesthesia and analgesia to the lateral thigh. Usually used in conjunction with other lower extremity blocks, or alone for superficial procedures of the lateral thigh.<br><br>'+
+          '<b>Indications:</b> Anticipated lower extremity tourniquet pain, superficial procedures of the lateral thigh<br><br>'+
+          '<b>Common Surgeries:</b> Skin grafting of the lateral thigh<br><br>'+
+          '<b>Contraindications:</b><br><br>'+
+          '<b>Complications:</b><br><br>'+
+          '<b>Dosing:</b><br><br>',
+        surgeries: 'Skin grafting of the lateral thigh',
+        coverage: []
+      },
+      'saph': {
+        name: 'Mid-thigh Adductor Canal (Saphenous) Nerve Block',
+        notes: '',
+        coverage: []
+      },
+      'obturator': {
+        name: 'Obturator Nerve Block',
+        notes: '',
+        coverage: []
+      },
+      'popFoss': {
+        name: 'Popliteal Fossa Block',
+        notes: '',
+        coverage: []
+      },
+
+      // Neuraxial
+      'lumbEpi': {
+        name: 'Lumbar Epidural',
+        notes: '',
+        coverage: []
+      },
+      'thorEpi': {
+        name: 'Thoracic Epidural',
+        notes: '',
+        coverage: []
+      },
+
+      // Thoracic Wall
       'rectusSheath': {
         name: 'Rectus Sheath Block',
         notes: '',
         coverage: [ 'f_rect']
-      }
+      },
+
+      // Cranial
+      'scalp': {
+        name: 'Occipital Nerve Block',
+        notes: '',
+        coverage: ['f_triOpht', 'f_triMax', 'f_triMand']
+      },
+
     };
 
     var surgeries = [{
       name: 'Clavicle Fracture',
-      notes: '',
+      notes: '<b>Catheter vs Single Shot:</b> Single Shot or Catheter<br><br>'+
+      '<b>Dosing:</b> Ropivacaine 0.5% 4-5 mL at SCP and 10-20mL for ISB<br><br>'+
+      '<b>Infusion Rate:</b> Bupivacaine 0.125% @ 6 mL per hour<br><br>',
       blocks: [
         ['scp', 'isb']
       ]
     }, {
       name: 'Total or Partial Shoulder',
-      notes: '',
+      notes: '<b>Catheter vs Single Shot:</b> Single Shot or Catheter<br><br>'+
+      '<b>Dosing:</b> Ropivacaine 0.5% 20 mL or Bupivicaine 0.375% 20mL<br><br>'+
+      '<b>Infusion Rate:</b> Bupivacaine 0.125% @ 6 mL per hour<br><br>',
       blocks: [
         ['isb']
+      ]
+    }, {
+      name: 'Proximal humerous fracture',
+      notes: 'Avoid unless the surgeon agrees. Concern for radial nerve damage.',
+      blocks: []
+    }, {
+      name: 'Awake Craniotomy',
+      notes: '<b>Catheter vs Single Shot:</b> Single Shot<br><br>'+
+          '<b>Dosing:</b> Bupivacaine 0.25% 3-5mL per site<br><br>',
+      blocks: [
+        ['scalp']
       ]
     }];
 
@@ -398,7 +569,7 @@
             flipPt.y = e.clientY;
           }
 
-          console.log(mainPt, flipPt)
+          // console.log(mainPt, flipPt)
 
           var side = 'left';
           if (group == 'front') side = e.offsetX > middle ? 'right' : 'left';
@@ -409,7 +580,7 @@
             var parentEl = $(path).closest('g');
             if (parentEl.hasClass('flip')) return;
 
-            var checkPt = function(pt) {
+            var checkPt = function(pt, flipped) {
               var newPt = pt.matrixTransform(path.getScreenCTM().inverse());
               var inside = path.isPointInFill(newPt);
               var parent = parentEl.attr('id');
@@ -418,17 +589,16 @@
                 var reverseName = '';
                 for (var name in namedSections) if (namedSections[name] == group + ',' + id) reverseName = name;
                 // console.log(reverseName != '' ? reverseName : id);
-                contains[reverseName != '' ? reverseName : group + ',' + id] = side;
+                contains[reverseName != '' ? reverseName : group + ',' + id] = side + (flipped ? '_flipped' : '');
               }
             }
 
-            checkPt(mainPt);
-            if (flipPt != null) checkPt(flipPt);
+            checkPt(mainPt, false);
+            if (flipPt != null) checkPt(flipPt, true);
           });
 
-          state.listType = 'location';
 
-          // if (state.listType == 'location') {
+          if (state.listType == 'location') {
             $('.locPt').remove();
             var actualPt = mainPt.matrixTransform(svg.getScreenCTM().inverse());
             $('#'+group + '> svg').append($('<circle stroke="black" fill="yellow" class="locPt" cx="'+actualPt.x+'" cy="'+actualPt.y+'" r="3"/>'))
@@ -445,9 +615,12 @@
               }
             }
             if (dataList.length > 0) selected = 0;
-          // }
+            refresh();
+          } else {
+            console.log('all contains', contains);
+            // refresh();
+          }
 
-          // console.log('all contains', contains);
           // for (var name in contains) {
           //   if (!!alreadyShown[name + ':' + contains[name]]) continue;
           //   alreadyShown[name + ':' + contains[name]] = true;
@@ -456,7 +629,7 @@
           //   break;
           // }
 
-          refresh();
+          // state.listType = 'location';
           // reloadSVG();
         });
       });
@@ -614,7 +787,7 @@
       var selectedBlocks = {};
 
       dataList.map(function(item, i) {
-        if (item.type != 'block') return;
+        if (item.names == null) return;
         var isSelected = i == selected;
         if (isSelected) {
           item.names.map(function(blockName) {
@@ -670,8 +843,13 @@
 
       if (surgerySearchBox != null) {
         surgerySearchBox.list = surgeries.map(function(data, surgery_i) {
-          return { name: surgery_i, label: data.name };
-        });
+          return { name: surgery_i, filterText: data.name, type: 'surgery', label: data.name };
+        }).concat(keys(blocks).map(function(blockName) {
+          var data = blocks[blockName];
+          return { name: blockName, filterText: data.surgeries, type: 'block', label: data.name };
+        }).filter(function(data) {
+          return data.filterText != null;
+        }));
       }
 
       reloadSVG();
@@ -755,6 +933,9 @@
 
       surgerySearchBox = new Awesomplete($('#surgerySearch')[0], {
         list: [], minChars: 0, autoFirst: true, maxItems: 8,
+        filter: function (data, input) {
+          return data.value.filterText.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+        },
         data: function(item) {
           return { label: item.label, value: item };
         }
@@ -762,17 +943,27 @@
       surgerySearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
         $('#surgerySearch').val('');
         var value = data.text.value;
-        var data = surgeries[value.name];
-        
-        selected = dataList.length;
-        addToList({ type: 'surgery', name: value.name  });
-        data.blocks.map(function(blockNames) {
-          addToList({
-            type: 'block',
-            names: blockNames
+        dataList = [];
+
+        if (value.type == 'surgery') {
+          var data = surgeries[value.name];
+          selected = dataList.length;
+          var surgItem = { type: 'surgery', name: value.name  };
+          if (data.blocks.length == 1) surgItem.names = data.blocks[0];
+          addToList(surgItem);
+          data.blocks.map(function(blockNames) {
+            addToList({
+              type: 'block',
+              names: blockNames
+            });
           });
-        });
-        if (selected >= dataList.length) selected = dataList.length - 1;
+          if (selected >= dataList.length) selected = dataList.length - 1;
+        } else if (value.type == 'block') {
+          var data = blocks[value.name];
+          selected = dataList.length;
+          addToList({ type: 'block', names: [value.name] });
+          if (selected >= dataList.length) selected = dataList.length - 1;
+        }
 
         refresh();
       });
