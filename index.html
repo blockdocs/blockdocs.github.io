@@ -26,7 +26,7 @@
     .mapSpot:hover {
       border: #0998a8 solid 2px;
     }
-    .mapSpot.active {in
+    .mapSpot.active {
       border: #0998a8 solid 2px;
       background-color: #0998a8;
     }
@@ -68,13 +68,13 @@
           <div id="mapSection">
             <div>
               <h5 style="margin-top: 10px;margin-left: 10px;display: inline-block;margin-right: 5px;vertical-align: top;">Map</h5>
-              <select class="form-control" style="width: calc(100% - 70px);display: inline-block;margin: 5px;">
-                <option>Brachial Plexus</option>
+              <select id="mapSelect" class="form-control" style="width: calc(100% - 70px);display: inline-block;margin: 5px;">
+                <option value="brachial">Brachial Plexus</option>
               </select>
             </div>
             <h5 id="mapTitle" style="padding-left: 10px;padding-right: 10px;text-align: center;padding-top: 10px;">Click or hover over a spot to block</h5>
             <div style="position: relative;width: calc(100% - 20px);margin-left: 10px;">
-              <div>
+              <div id="mapSpotList">
                 <div class="mapSpot" data-block="isb" style="width: 1.5%;height: 37%;border-radius: 4px;left: 68%;top: 20%;transform: rotate(348deg);"></div>
                 <div class="mapSpot" data-block="supraclavicular" style="width: 1.5%;height: 37%;border-radius: 4px;left: 58%;top: 26%;transform: rotate(337deg);"></div>
                 <div class="mapSpot" data-block="infraclavicular" style="width: 1.5%;height: 33%;border-radius: 4px;left: 50%;top: 36%;transform: rotate(326deg);"></div>
@@ -83,7 +83,7 @@
                 <div class="mapSpot" data-block="ulnar" style="width: 3%;height: 4%;border-radius: 4px;left: 31%;top: 79%;"></div>
                 <div class="mapSpot" data-block="median" style="width: 3%;height: 4%;border-radius: 4px;left: 26%;top: 76%;"></div>
               </div>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Brachial_plexus_2.svg/1920px-Brachial_plexus_2.svg.png" style="width: calc(100% - 20px);border: black 1px solid;border-radius: 10px;margin-top: 5px;margin-left: 10px;margin-right: 10px;margin-bottom: 5px;">
+              <img id="mapImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Brachial_plexus_2.svg/1920px-Brachial_plexus_2.svg.png" style="width: calc(100% - 20px);border: black 1px solid;border-radius: 10px;margin-top: 5px;margin-left: 10px;margin-right: 10px;margin-bottom: 5px;">
             </div>
           </div>
           <div id="locationSection" style="display: none;">
@@ -112,11 +112,15 @@
           <i id="flipBody" data-toggle="tooltip" title="Flip" data-placement="bottom" class="fa-solid fa-repeat" style="display: inline-block; font-size: 20px; padding: 5px; cursor: pointer; margin-right: 0px;"></i>
           <i id="expandBody" data-toggle="tooltip" title="Expand" data-placement="bottom" class="fa-solid fa-up-right-and-down-left-from-center" style="display: inline-block; font-size: 20px; padding: 5px; cursor: pointer;"></i>
         </div>
+        <div id="flipSyringe" class="btn btn-light btn-outline-info" style="position: absolute; bottom: 10; color: #0998a8; background-color: white;"><i data-toggle="tooltip" title="" data-placement="bottom" class="fa-solid fa-repeat" style="display: inline-block;font-size: 18px;padding: 5px;cursor: pointer;margin-left: 3px;" data-original-title="Flip"></i>
+          <img src="/res/images/syringe.png" width="25px" style="margin-left: 5px;margin-bottom: 4px;">
+        </div>
         <div style="border-left: 1px black solid;position: absolute;top: 0px;right: 0px;width: 45px;border-bottom-left-radius: 10px;border-bottom: 1px black solid;">
           <i data-toggle="tooltip" title="" data-placement="left" class="skinBody fa-solid fa-face-meh" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;color: #0a5da2;width: 44px;" data-original-title="Skin Layer"></i>
           <i data-toggle="tooltip" title="" data-placement="left" class="boneBody fa-solid fa-bone" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;border-bottom: 1px solid black;width: 44px;" data-original-title="Bone Layer"></i>
           <i data-toggle="tooltip" title="" data-placement="left" class="muscleBody fa-solid fa-dumbbell" style="display: inline-block;font-size: 20px;padding: 12px;cursor: pointer;width: 44px;" data-original-title="Muscle Layer"></i>
         </div>
+        <div id="syringeList"></div>
         <!-- <i class="fa-solid fa-circle-dot" style="position: absolute; left: 65%; top: 20%; color: black;"></i> -->
         <div id="front" style="display: inline-block; width: 100%; height: 100%;">
           <!-- <%- include ("./res/svg/bodymapFront.svg") %> -->
@@ -175,10 +179,43 @@
     var mapHoverBlock = null;
 
     var selected = 0;
-    var dataList = [{
-      type: 'block',
-      names: ['axillary']
-    }];
+    var dataList = [];
+
+    var mapChoice = 'brachial';
+    var mapList = [{
+      id: 'brachial',
+      name: 'Brachial Plexus',
+      img: 'res/images/brachialPlexus.png',
+      mapSpots: [
+        { block: 'isb', css: 'width: 1.5%;height: 37%;border-radius: 4px;left: 68%;top: 20%;transform: rotate(348deg);' },
+        { block: 'supraclavicular', css: 'width: 1.5%;height: 37%;border-radius: 4px;left: 58%;top: 26%;transform: rotate(337deg);'},
+        { block: 'infraclavicular', css: 'width: 1.5%;height: 33%;border-radius: 4px;left: 50%;top: 36%;transform: rotate(326deg);'},
+        { block: 'axillary', css: 'width: 3%;height: 4%;border-radius: 4px;left: 38%;top: 59%;'},
+        { block: 'radial', css: 'width: 3%;height: 4%;border-radius: 4px;left: 39%;top: 64%;'},
+        { block: 'ulnar', css: 'width: 3%;height: 4%;border-radius: 4px;left: 31%;top: 79%;'},
+        { block: 'median', css: 'width: 3%;height: 4%;border-radius: 4px;left: 26%;top: 76%;'}
+      ]
+    }, {
+      id: 'lumbar',
+      name: 'Lumbar Plexus',
+      img: 'res/images/lumbarPlexus.png',
+      mapSpots: [
+        { block: 'lumbarPlexus', css: 'width: 1.5%;height: 28%;border-radius: 4px;left: 67%;top: 17%;transform: rotate(356deg);'},
+        { block: 'fib', css: 'width: 1.5%;height: 26%;border-radius: 4px;left: 59%;top: 30%;transform: rotate(294deg);' },
+        { block: 'fem', css: 'width: 1.5%;height: 8%;border-radius: 4px;left: 55%;top: 55%;transform: rotate(312deg);' },
+        { block: 'obturator', css: 'width: 1.5%;height: 6%;border-radius: 4px;left: 65%;top: 51%;transform: rotate(264deg);' },
+        { block: 'sciatic', css: 'width: 1.5%;height: 9%;border-radius: 4px;left: 56%;top: 75%;transform: rotate(296deg);'}
+      ]
+    }, {
+      id: 'knee',
+      name: 'Knee Joint',
+      img: 'res/images/kneeFocus.png',
+      mapSpots: [
+        { block: 'saph', css: 'width: 1.5%;height: 7%;border-radius: 4px;left: 63%;top: 17%;transform: rotate(272deg);' },
+        { block: 'popFoss', css: 'width: 1.5%;height: 10%;border-radius: 4px;left: 57%;top: 33%;transform: rotate(272deg);' },
+        { block: 'btkSaph', css: 'width: 1.5%;height: 6%;border-radius: 4px;left: 65%;top: 57%;transform: rotate(272deg);' }
+      ]
+    }]
 
     var namedSections = {
       'f_radSup': 'front,path6027',
@@ -190,7 +227,8 @@
       'f_bracCut': 'front,path5479',
       'f_icb': 'front,path5440',
       'f_aslp': 'front,path5401',
-      'f_supClav': 'front,path5362',
+      'f_supClavLat': 'front,path9381',
+      'f_supClavMed': 'front,path9420',
 
       'f_Vcran': 'front,path15082',
       'f_C2': 'front,path15121',
@@ -228,6 +266,7 @@
       'b_C5': 'back,path5515',
       'b_C4': 'back,path3160',
       'b_C3': 'back,path3236',
+      'b_C2': 'back,path17867',
 
       'f_latFemC': 'front,path12743',
       'f_antFemC': 'front,path12782',
@@ -269,6 +308,7 @@
           '<b>Common Surgeries:</b><br><br>'+
           '<b>Contraindications:</b><br><br>'+
           '<b>Complications:</b><br><br>'+
+          '<b>Considerations:</b><br><br>'+
           '<b>Dosing:</b><br><br>';
 
     var blocks = {
@@ -277,53 +317,77 @@
         name: 'Interscalene Block (ISB)',
         notes: '<b>Sensory Coverage:</b> C5-C7 roots/superior trunk<br><br>'+
         '<b>Description:</b> An upper brachial plexus block at the level of the upper roots and superior trunk. Best employed for surgery proximal to the mid humerus, as lower (C8 and T1) roots/inferior trunk are rarely covered<br><br>'+
-        '<b>Indications:</b> Surgery of the shoulder, proximal humerus, lateral two-thirds of the clavicle. Consider performing a cervical plexus block and intercostobrachial nerve block in addition to ISB for primary surgical anesthesia of the shoulder and for clavicle inhury and surgery<br><br>'+
+        '<b>Indications:</b> Surgery of the shoulder, proximal humerus, lateral two-thirds of the clavicle. Consider performing a cervical plexus block and intercostobrachial nerve block in addition to ISB for primary surgical anesthesia of the shoulder and for clavicle injury and surgery<br><br>'+
         '<b>Common Surgeries:</b> Rotator Cuff Repair, Acromioplasty, Humerus fracture, Clavicular Fracture, Bankart\'s Repair, Laterjet, Proximal Humerus osteosynthesis, acromioclavicular resection, shoulder dislocation<br><br>'+
         '<b>Contraindications:</b> Patient refusal, coagulopathy, COPD (relative), contralateral pneumonectomy or significant pleural effusion, contralateral diaphragmatic or phrenic nerve injury<br><br>'+
-        '<b>Complications:</b><br> Total spinal anesthesia, epidural anesthesia, cervical spinal cord injection, vertebral artery injection, pneumothorax, phrenic nerve paralysis (100%), recurrent laryngeal nerve paralysis, Horner\'s syndrome<br><br>',
-        coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6' ]
+        '<b>Complications:</b> Total spinal anesthesia, epidural anesthesia, cervical spinal cord injection, vertebral artery injection, pneumothorax, phrenic nerve paralysis (100%), recurrent laryngeal nerve paralysis, Horner\'s syndrome<br><br>'+
+        '<b>Considerations:</b> Avoid in patients with severe respiratory disease due to ipsilateral phrenic nerve block. Consider Infraclavicular block as an alternative.<br><br>'+
+        '<b>Dosing:</b> 5-10 cc of choice local anesthetic for postoperative analgesia, 20-30cc recommended for surgical anesthesia. Greater volume of injected anesthetic may increased risk of ipsilateral phrenic nerve palsy<br><br>',
+        surgeries: 'Rotator Cuff Repair, Acromioplasty, Humerus fracture, Clavicular Fracture, Bankart\'s Repair, Laterjet, Proximal Humerus osteosynthesis, acromioclavicular resection, shoulder dislocation',
+        coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6', 'b_C7', 'f_C7', 'b_C2', 'f_C2', 'f_supClavLat' ],
+        syringe: { side: '31.7%', top: '10%', rotate: '259', bodySide: 'front' }
       }, 
+      'scp': {
+        name: 'Superficial Cervical Plexus Block (SCP)',
+        notes: '<b>Sensory Coverage:</b> C1-C4<br><br>'+
+          '<b>Description:</b> A cervical plexus block that provides superficial, skin level analgesia to the neck, anterior shoulder, and clavicle.<br><br>'+
+          '<b>Indications:</b> Surgery of the neck, shoulder, clavicle.<br><br>'+
+          '<b>Common Surgeries:</b> Carotid Endarterectomy, Neck Surgery (superficial)<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, coagulopathy, COPD (relative), contralateral pneumonectomy or significant pleural effusion, contralateral diaphragmatic or phrenic nerve injury<br><br>'+
+          '<b>Complications:</b> Total spinal anesthesia, epidural anesthesia, cervical spinal cord injection, vertebral artery injection, pneumothorax, phrenic nerve paralysis (100%), recurrent laryngeal nerve paralysis, Horner\'s syndrome<br><br>'+
+          '<b>Considerations:</b> Randomized trials have failed to demonstrate a difference in analgesia between the superficial and deep cervical plexus blocks. This block will also cause hemidiaphragmatic paralysis, use in caution with patients with severe respiratory disease.<br><br>'+
+          '<b>Dosing:</b> 5-15 cc of dilute local anesthetic recommended, 0.25% bupivacaine for example. <br><br>',
+        surgeries: 'Carotid Endarterectomy, Neck Surgery (superficial)',
+        coverage: [ 'f_C2', 'f_C3', 'f_C4med2', 'f_C4med', 'f_C4lat', 'b_C2', 'b_C3', 'b_C3', 'b_C4' ],
+        syringe: { side: '131', top: '75', rotate: '259', bodySide: 'front' }
+      },
       'supraclavicular': {
         name: 'Supraclavicular Block',
-        notes: '<b>Sensory Coverage:</b> C5-T1 trunks<br><br>'+
-        '<b>Description:</b> A versatile upper extremity block which provides surgical anesthesia below the shoulder at the level of the trunks. Works well for elbow and hand surgery.<br><br>'+
-        '<b>Indications:</b> Surgery of the upper extremity distal to the proximal humerus. Consider adding an intercostobrachial nerve block for medial arm coverage.<br><br>'+
-        '<b>Common Surgeries:</b> Distal Humerus fracture, Forearm surgery, Wrist Surgery, Arterio-Venous Fisula<br><br>'+
+        notes: '<b>Sensory Coverage:</b> C5-T1, brachial plexus trunks<br><br>'+
+        '<b>Description:</b> A versatile upper extremity block which provides surgical anesthesia below the shoulder at the level of the trunks. Works well for elbow and hand surgery. <br><br>'+
+        '<b>Indications:</b> Surgery of the upper extremity distal to the proximal humerus. Consider adding an intercostobrachial nerve block for medial arm coverage. <br><br>'+
+        '<b>Common Surgeries:</b> Distal Humerus fracture, Forearm surgery, Wrist Surgery, Arteriovenous Fistula<br><br>'+
         '<b>Contraindications:</b> Patient refusal, coagulopathy, COPD (relative), bilateral upper extremity surgery (relative)<br><br>'+
-        '<b>Complications:</b> Pneumothorax (highest risk), phrenic nerve block causing diaphragmatic paralysis (50%), Horner Syndrome, intravascular injection, noncompressible hematoma',
+        '<b>Complications:</b> Pneumothorax (highest risk), phrenic nerve block causing diaphragmatic paralysis (50%), Horner\'s Syndrome, intravascular injection, noncompressible hematoma<br><br>'+
+        '<b>Considerations:</b> Although this block carries a lower risk of ipsilateral phrenic nerve palsy compared to the ISB, continue to exercise caution in patients with severe respiratory disease and inform patients of the possible post-block risk. For surgeries of the distal arm and hand, ensure proper spread of local anesthetic around the inferior trunks (so called "corner pocket".<br><br>'+
+        '<b>Dosing:</b> 20-30 cc of 0.5% ropivacaine for postoperative analgesia, consider using 2% lidocaine or 1.5% mepivacaine for surgical anesthesia<br><br>',
+        surgeries: 'Distal Humerus fracture, Forearm surgery, Wrist Surgery, Arteriovenous Fistula',
         coverage: [ 'f_C5', 'f_C6', 'f_C7', 'b_C5', 'b_C6', 'b_C7' ],
+        syringe: { side: '119', top: '102', rotate: '239', bodySide: 'front' }
       }, 
       'infraclavicular': {
         name: 'Infraclavicular Block',
-        notes: '<b>Sensory Coverage:</b><br><br>'+
-          '<b>Description:</b><br><br>'+
-          '<b>Indications:</b><br><br>'+
-          '<b>Common Surgeries:</b><br><br>'+
-          '<b>Contraindications:</b><br><br>'+
-          '<b>Complications:</b><br><br>',
-        coverage: [ 'f_C7', 'f_C8', 'b_C7', 'b_C8' ]
+        notes: '<b>Sensory Coverage:</b> C5 - T1 cords<br><br>'+
+          '<b>Description:</b> An upper extremity block which provides surgical anesthesia at the levels of the cords. Provides increased efficacy and stability of a nerve block catheter compared to the supraclavicular approach.<br><br>'+
+          '<b>Indications:</b> Surgery of the upper extremity distal to the proximal humerus. Provides consistent coverage of the axillary and intercostobrachial nerves. May be superior to supraclavicular approach for placement of a continuous nerve block catheter.<br><br>'+
+          '<b>Common Surgeries:</b> Forearm surgery, wrist surgery, arteriovenous fistula repair, <br><br>'+
+          '<b>Contraindications:</b> Patient refusal, Coagulopathy (relative)<br><br>'+
+          '<b>Complications:</b> Intravascular injection, Axillary artery puncture, pectoral discomfort<br><br>'+
+          '<b>Considerations:</b> Allows for more secure placement of a brachial plexus catheter compared to the supraclavicular block. Recent evidence demonstrating superior quality of analgesia with infraclavicular nerve catheters compared to supraclavicular or axillary.<br><br>'+
+          '<b>Dosing:</b> 20-30 cc of 0.5% ropivacaine for postoperative analgesia, consider using 2% lidocaine or 1.5% mepivacaine for surgical anesthesia<br><br>',
+        surgeries: 'Forearm surgery, wrist surgery, arteriovenous fistula repair',
+        coverage: [ 'f_C7', 'f_C8', 'f_T1', 'b_C7', 'b_C8', 'b_T1' ],
+        syringe: { side: '128', top: '88', rotate: '315', bodySide: 'front' }
       }, 
       'axillary': {
         name: 'Axillary Block',
-        notes: '<b>Sensory Coverage:</b><br><br>'+
-          '<b>Description:</b><br><br>'+
-          '<b>Indications:</b><br><br>'+
-          '<b>Common Surgeries:</b><br><br>'+
-          '<b>Contraindications:</b><br><br>'+
-          '<b>Complications:</b><br><br>'+
-          '<b>Dosing:</b><br><br>',
-        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
+        notes: '<b>Sensory Coverage:</b> C5 - T1 terminal branches<br><br>'+
+          '<b>Description:</b> An upper extremity block which provides surgical anesthesia at the level of the terminal branches of the brachial plexus.<br><br>'+
+          '<b>Indications:</b> Surgery of the elbow, forearm, and hand. May need to supplement this block with a musculocutaneous nerve block for lateral forearm surgery.<br><br>'+
+          '<b>Common Surgeries:</b> Surgery of arm, forearm, wrist <br><br>'+
+          '<b>Contraindications:</b> Patient refusal, Severe Coagulopathy, axillary lymphadenopathy<br><br>'+
+          '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection<br><br>'+
+          '<b>Considerations:</b> May serve as an optimal block site for patients who are being actively anticoagulated. The axilla is a compressible site in the case of unexpected vascular puncture and subsequent hematoma formation.<br><br>'+
+          '<b>Dosing:</b> 20-30cc of choice local anesthetic, deposited primarily between the axillary artery and posterior cord. Consider 0.5% ropivacaine if long acting postoperative analgesia desired.<br><br>',
+        surgeries: 'Surgery of arm, forearm, wrist',
+        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'f_T1', 'b_C6', 'b_C7', 'b_C8', 'b_T1' ],
+        syringe: { side: '106', top: '129', rotate: '314', bodySide: 'front' }
       },
-      'scp': {
-        name: 'Superficial Cervical Plexus Block (SCP)',
+      'intercostobracial': {
+        name: 'Intercostobrachial Block',
         notes: '',
-        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'b_C6', 'b_C7', 'b_C8' ]
+        coverage: [ 'f_icb', 'b_icb' ]
       },
-      // 'intercostobracial': {
-      //   name: 'Intercostobrachial Block',
-      //   notes: '',
-      //   coverage: [ 'f_icb', 'b_icb' ]
-      // },
 
       // Wrist
       'radial': {
@@ -394,25 +458,58 @@
         notes: '<b>Description:</b> A lower extremity block that is a useful adjunct to provide anesthesia and analgesia to the lateral thigh. Usually used in conjunction with other lower extremity blocks, or alone for superficial procedures of the lateral thigh.<br><br>'+
           '<b>Indications:</b> Anticipated lower extremity tourniquet pain, superficial procedures of the lateral thigh<br><br>'+
           '<b>Common Surgeries:</b> Skin grafting of the lateral thigh<br><br>'+
-          '<b>Contraindications:</b><br><br>'+
-          '<b>Complications:</b><br><br>'+
-          '<b>Dosing:</b><br><br>',
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic, any concern for compartment syndrome<br><br>'+
+          '<b>Complications:</b> Hematoma, Infection, Damage to the LFCN causing paresthesias and numbness<br><br>'+
+          '<b>Dosing:</b> Brown Atlas of Regional Anesthesia - 10-15cc of local anesthetic, 0.5-0.75% bupivacaine or lidocaine, 0.25% bupivacaine or 0.2% ropivacaine<br><br>',
         surgeries: 'Skin grafting of the lateral thigh',
         coverage: []
       },
       'saph': {
         name: 'Mid-thigh Adductor Canal (Saphenous) Nerve Block',
-        notes: '',
+        notes: '<b>Description:</b> A lower extremity nerve block that can provide anesthesia or analgesia to the knee, medial lower leg, and ankle. Commonly used in place of a femoral block for knee surgery when motor block is not desired.<br><br>'+
+          '<b>Indications:</b> Surgery of the knee and medial lower leg <br><br>'+
+          '<b>Common Surgeries:</b> TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair, Below Knee Amputation (combined with Proximal Sciatic Block)<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic, any concern for compartment syndrome<br><br>'+
+          '<b>Complications:</b> Hematoma, Infection, Damage to the saphenous nerve, motor weakness, <br><br>'+
+          '<b>Considerations:</b> Evidence suggesting that patients who received adductor canal block catheters for postop analgesia were able to ambulate further on POD#1 s/p TKA compared to those with femoral nerve block or no block.<br><br>'+
+          '<b>Dosing:</b> UTD - Typical injection of 10-15 mL of local anesthetic. Typical choice of 0.2% ropivacaine or 0.24% bupivacaine<br><br>',
+        surgeries: 'TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair, Below Knee Amputation (combined with Proximal Sciatic Block)',
+        coverage: []
+      },
+      'btkSaph': {
+        name: 'Below the Knee Saphenous Nerve Block',
+        notes: '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia to the medial lower leg and medial foot. Can be supplemented with a sciatic nerve to help block the medial malleolus and foot.<br><br>'+
+          '<b>Indications:</b> Surgery of the medial leg or medial foot<br><br>'+
+          '<b>Common Surgeries:</b> Surgery of the medial malleolus, Skin grafting of the medial lower leg<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic,  Tibial plateau fracture (high concern for compartment syndrome)<br><br>'+
+          '<b>Complications:</b> Hematoma, Infection, Damage to the saphenous nerve causing paresthesias<br><br>'+
+          '<b>Considerations:</b> Mostly a sensory block, however use caution when injecting large volume of local anesthetic, which can cause a motor block of the vastus medialis muscle. Typically avoid in tibial plateau fractures.<br><br>'+
+          '<b>Dosing:</b> Consider 15-20 cc of choice local anesthetics<br><br>',
+        surgeries: 'Surgery of the medial malleolus, Skin grafting of the medial lower leg',
         coverage: []
       },
       'obturator': {
         name: 'Obturator Nerve Block',
-        notes: '',
+        notes: '<b>Description:</b> A lower extremity block that is can provide anesthesia or analgesia to the medial distal thigh. Use in combination with other blocks to help control tourniquet pain.<br><br>'+
+          '<b>Indications:</b> Anticipated lower extremity tourniquet pain, prevent motor response to hip adductors during TURP under spinal anesthesia, hip pain, hip adductors spasticity, augment analgesia for knee surgery<br><br>'+
+          '<b>Common Surgeries:</b> TURP in additional to spinal anesthesia, Surgery of the medial distal thigh.<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic, any concern for compartment syndrome<br><br>'+
+          '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection<br><br>'+
+          '<b>Considerations:</b> Most effective when combined with sciatic, femoral, and LFCN blocks for lower extremity surgery.<br><br>'+
+          '<b>Dosing:</b> Brown et al - If motor block is not necessary, lower concentrations of local anesthetic recommended, 8-10 cc of 0.75-1.0% lidocaine or mepivacaine, 0.25% bupivacaine, 0.2% ropivacaine.<br><br>',
+        surgeries: 'TURP in additional to spinal anesthesia, Surgery of the medial distal thigh.',
         coverage: []
       },
       'popFoss': {
         name: 'Popliteal Fossa Block',
-        notes: '',
+        notes: '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia for foot and ankle surgery. Can be augmented with a saphenous nerve block to improve medial ankle coverage.<br><br>'+
+          '<b>Indications:</b> Distal lower leg, foot and ankle surgery<br><br>'+
+          '<b>Common Surgeries:</b> Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal), Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with a Saphenous Block)<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic, any concern for compartment syndrome<br><br>'+
+          '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection, foot drop from prolonged motor block <br><br>'+
+          '<b>Considerations:</b> Can be used in conjunction with a saphenous/femoral nerve block for complete anesthesia below the knee<br><br>'+
+          '<b>Dosing:</b> Brown et al - Lower concentrations of local anesthetic are effective as this is primarily a sensory block. Consider 1% lidocaine or mepivacaine, 0.25-0.5% bupivacaine or 0.2-0.5% ropivacaine.<br><br>',
+        surgeries: '',
         coverage: []
       },
 
@@ -464,6 +561,21 @@
       name: 'Proximal humerous fracture',
       notes: 'Avoid unless the surgeon agrees. Concern for radial nerve damage.',
       blocks: []
+    }, {
+      name: 'Distal Humerus Fracture',
+      notes: '',
+      blocks: [
+        ['isb'],
+        ['supraclavicular']
+      ]
+    }, {
+      name: 'Forearm or Wrist',
+      notes: '',
+      blocks: [
+        ['supraclavicular', 'intercostobracial'],
+        ['axillary'],
+        ['infraclavicular']
+      ]
     }, {
       name: 'Awake Craniotomy',
       notes: '<b>Catheter vs Single Shot:</b> Single Shot<br><br>'+
@@ -518,11 +630,11 @@
           }
 
           if (originalSide == side) {
-            el.css('visibility', '').css('fill', fill);
+            el.css('visibility', '').css('fill', fill).css('stroke', '');
           } else {
             var flipped = $(el[0].outerHTML);
             flipped.attr('id', 'flip_' + id);
-            flipped.css('visibility', '').css('fill', fill);
+            flipped.css('visibility', '').css('fill', fill).css('stroke', '');
 
             var newParent = $('<g class="flip">'); //  transform="scale (-1, 1)" transform-origin="800px, 0px"
             newParent.append(flipped);
@@ -597,6 +709,7 @@
             if (flipPt != null) checkPt(flipPt, true);
           });
 
+          state.listType = 'location';
 
           if (state.listType == 'location') {
             $('.locPt').remove();
@@ -629,7 +742,6 @@
           //   break;
           // }
 
-          // state.listType = 'location';
           // reloadSVG();
         });
       });
@@ -638,7 +750,9 @@
     var surgerySearchBox = null;
     var blockSearchBox = null;
 
-    var refresh = function() {
+    var refresh = function(opts) {
+      opts = opts || {};
+
       $('.flip').remove();
       alreadyShown = {};
 
@@ -754,34 +868,54 @@
         refresh();
       });
 
-      var item = null;
+      var noteItem = null;
       if (state.listType == 'map') {
-        var focusId = mapHoverBlock || mapClickBlock;
-        $('#mapTitle').text('Click or hover over a spot to block');
+
+        if (!opts.skipMapDraw) {
+          $('#mapSelect').empty();
+          mapList.map(function(mapItem) {
+            $('#mapSelect').append($('<option value="'+mapItem.id+'">'+mapItem.name+'</option>'));
+          });
+          $('#mapSelect').val(mapChoice).unbind('change').on('change', function() {
+            mapChoice = $(this).val();
+            refresh();
+          });
+          
+          var mapItem = mapList.find(n => n.id == mapChoice);
+          var focusId = mapHoverBlock || mapClickBlock;
+          $('#mapTitle').text('Click or hover over a spot to block');
+          $('#mapImg').attr('src', mapItem.img);
+          $('#mapSpotList').empty();
+          mapItem.mapSpots.map(function(spot) {
+            $('#mapSpotList').append($('<div class="mapSpot" data-block="'+spot.block+'" style="'+spot.css+'"></div>'));
+          });
+
+          $('.mapSpot').unbind('click').click(function() {
+            var block = getProp(this, 'block');
+            if (mapClickBlock == block) mapClickBlock = null;
+            else mapClickBlock = block;
+            refresh();
+          });
+
+          $('.mapSpot').mouseenter(function() {
+            var block = getProp(this, 'block');
+            mapHoverBlock = block;
+            refresh({ skipMapDraw: true });
+          }).mouseleave(function() {
+            mapHoverBlock = null;
+            refresh();
+          });
+        }
+        
         if (focusId != null) {
-          item = { type: 'block', names: [focusId] };
+          noteItem = { type: 'block', names: [focusId] };
           var data = blocks[focusId];
           if (data != null) $('#mapTitle').text(data.name);
         }
-      } else if (dataList[selected] != null) item = dataList[selected];
+      } else if (dataList[selected] != null) noteItem = dataList[selected];
 
       $('.mapSpot').removeClass('active');
       $('.mapSpot[data-block="'+mapClickBlock+'"]').addClass('active');
-
-      var notes = '<h6>Pick a block or surgery to see notes related to it.</h6>';
-      if (item != null) {
-        if (item.type == 'surgery') {
-          var data = surgeries[item.name];
-          notes = '<h5>'+data.name+'</h5><p>'+data.notes+'</p>';
-        } else if (item.type == 'block') {
-          notes = item.names.map(function(blockName) {
-            var data = blocks[blockName];
-            if (data == null) return '';
-            return '<h5>'+data.name+'</h5><p>'+((data.notes || '').trim().length == 0 ? 'No notes yet' : data.notes)+'</p>';
-          }).join('');
-        }
-      }
-      $('#blockNotes').html(notes);
 
       var backgroundBlocks = {};
       var selectedBlocks = {};
@@ -805,17 +939,38 @@
         $(n).css('fill', 'grey');
       });
 
+      $('#flipSyringe').hide().unbind('click').click(function() {
+        state.bodySide = state.bodySide == 'back' ? 'front' : 'back';
+        saveState();
+        refresh();
+      });
+      $('#syringeList').empty();
+      var addSyringe = function(block, flipped) {
+        if (block.syringe == null) return;
+        return;
+        if (block.syringe.bodySide != null && block.syringe.bodySide != state.bodySide) {
+          $('#flipSyringe').show();
+          return;
+        }
+        $('#syringeList').append($('<img src="/res/images/syringe.png" style="width: 54px;position: absolute;'+(!!flipped ? 'right' : 'left')+': '+block.syringe.side+';top: '+block.syringe.top+';transform: '+(!!flipped ? 'scaleX(-1)' : '')+'rotate('+block.syringe.rotate+'deg);">'));
+      };
+
       if (state.listType == 'map') {
         if (mapClickBlock != null && mapHoverBlock != null && mapClickBlock != mapHoverBlock && blocks[mapClickBlock] != null) {
           showBlock(blocks[mapClickBlock].coverage, 'left', { color: 'grey' });
           showBlock(blocks[mapClickBlock].coverage, 'right', { color: 'grey' });
+          addSyringe(blocks[mapClickBlock]);
+          addSyringe(blocks[mapClickBlock], true);
         }
 
         var focusId = mapHoverBlock || mapClickBlock;
         var focusData = blocks[focusId];
         if (focusData != null) {
-          showBlock(data.coverage, 'left', { color: '#0998a8' });
-          showBlock(data.coverage, 'right', { color: '#0998a8' });
+          noteItem = { type: 'block', names: [focusId] };
+          showBlock(focusData.coverage, 'left', { color: '#0998a8' });
+          showBlock(focusData.coverage, 'right', { color: '#0998a8' });
+          addSyringe(focusData);
+          addSyringe(focusData, true);
         }
       } else {
         for (var blockName in backgroundBlocks) {
@@ -825,8 +980,27 @@
         for (var blockName in selectedBlocks) {
           showBlock(blocks[blockName].coverage, 'left', { color: '#0998a8' });
           showBlock(blocks[blockName].coverage, 'right', { color: '#0998a8' });
+          addSyringe(blocks[blockName]);
+          addSyringe(blocks[blockName], true);
         }
       }
+
+
+      var notes = '<h6>Pick a block or surgery to see notes related to it.</h6>';
+      if (noteItem != null) {
+        if (noteItem.type == 'surgery') {
+          var data = surgeries[noteItem.name];
+          notes = '<h5>'+data.name+'</h5><p>'+data.notes+'</p>';
+        } else if (noteItem.type == 'block') {
+          notes = noteItem.names.map(function(blockName) {
+            var data = blocks[blockName];
+            if (data == null) return '';
+            return '<h5>'+data.name+'</h5><p>'+((data.notes || '').trim().length == 0 ? 'No notes yet' : data.notes)+'</p>';
+          }).join('');
+        }
+      }
+      $('#blockNotes').html(notes);
+
 
       // $('#front, #back').find('#layer10, #layer9').children().each(function(i, n) {
       //   $(n).css('visibility', '');
@@ -914,22 +1088,6 @@
           return !(other.type == item.type && other.name == item.name && (other.names || []).join(',') == (item.names || []).join(','));
         })) dataList.push(item);
       };
-
-      $('.mapSpot').unbind('click').click(function() {
-        var block = getProp(this, 'block');
-        if (mapClickBlock == block) mapClickBlock = null;
-        else mapClickBlock = block;
-        refresh();
-      });
-
-      $('.mapSpot').mouseenter(function() {
-        var block = getProp(this, 'block');
-        mapHoverBlock = block;
-        refresh();
-      }).mouseleave(function() {
-        mapHoverBlock = null;
-        refresh();
-      });
 
       surgerySearchBox = new Awesomplete($('#surgerySearch')[0], {
         list: [], minChars: 0, autoFirst: true, maxItems: 8,
