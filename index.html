@@ -830,7 +830,7 @@
           }).join(' + ')+'</option>'))
         }
       });
-      if (dataList.length == 0) $('#mobileSelect').append($('<option value="0">Click to Select Block</option>'));
+      if (dataList.length == 0) $('#mobileSelect').append($('<option value="0">Click Body to Select Block</option>'));
       $('#mobileSelect').val(selected);
 
       $('#mobileSelect').unbind('change').on('change', function() {
