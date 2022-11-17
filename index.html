@@ -526,23 +526,23 @@
       },
 
       // Neuraxial
-      'lumbEpi': {
-        name: 'Lumbar Epidural',
-        notes: '',
-        coverage: []
-      },
-      'thorEpi': {
-        name: 'Thoracic Epidural',
-        notes: '',
-        coverage: []
-      },
+      // 'lumbEpi': {
+      //   name: 'Lumbar Epidural',
+      //   notes: '',
+      //   coverage: []
+      // },
+      // 'thorEpi': {
+      //   name: 'Thoracic Epidural',
+      //   notes: '',
+      //   coverage: []
+      // },
 
-      // Thoracic Wall
-      'rectusSheath': {
-        name: 'Rectus Sheath Block',
-        notes: '',
-        coverage: [ 'f_rect']
-      },
+      // // Thoracic Wall
+      // 'rectusSheath': {
+      //   name: 'Rectus Sheath Block',
+      //   notes: '',
+      //   coverage: [ 'f_rect']
+      // },
 
       // Cranial
       'scalp': {
@@ -830,6 +830,15 @@
       $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
         $(n).css('visibility', 'hidden');
       });
+
+      if (state.listType == 'map') {
+        var focusId = mapHoverBlock || mapClickBlock;
+        if (blocks[focusId] != null) {
+          dataList = [{ type: 'block', names: [focusId]}];
+          selected = 0;
+        }
+      }
+
 
       $('#mobileSelect').empty();
       dataList.map(function(item, i) {
