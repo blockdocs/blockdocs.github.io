@@ -42,11 +42,23 @@
     </span>
   </div>
   <div id="mainBar" class="bg loading" style="float: left;width: 100%;height: calc(100% - 50px);background-color: white;overflow-y: scroll;">
-    <div id="mobileTop" style="width: 100%;background-color: lightgrey;text-align: center;font-size: 21px;">
+    <div id="mobileTop" style="width: 100%;background-color: lightgrey;font-size: 21px;display: block;">
+      <div style="display: inline-block; width: 100%;">
+        <i class="fa-solid fa-bars mobileTab" data-type="list" style="padding-right: 8px;padding-left: 10px;"></i>
+        <select id="mobileSelect" class="form-control" style="width: calc(100% - 50px);display: inline-block;vertical-align: middle;margin-top: 6px;">
+          <option>Test Block</option>
+        </select>
+      </div>
+      <div style="display: inline-block;width: 100%;">
+          <div class="btn btn-light mobileTab" data-type="notes" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;"><i class="fa-solid fa-file-lines" style="margin-right: 8px;"></i>Notes</div>
+          <div class="btn mobileTab btn-secondary" data-type="body" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;float: right;"><i class="fa-solid fa-child-reaching" style="margin-right: 8px;"></i>Body</div>
+      </div>
+    </div>
+    <!-- <div id="mobileTop" style="width: 100%;background-color: lightgrey;text-align: center;font-size: 21px;">
       <div class="btn btn-light mobileTab" data-type="list" style="margin-top: 5px;margin-bottom: 5px;float: left;margin-left: 10px;margin-right: 10px;"><i class="fa-solid fa-bars" style="margin-right: 8px;"></i>Blocks</div>
       <div class="btn btn-light mobileTab" data-type="notes" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;"><i class="fa-solid fa-file-lines" style="margin-right: 8px;"></i>Notes</div>
       <div class="btn btn-light mobileTab" data-type="body" style="margin-top: 5px;margin-bottom: 5px;margin-left: 10px;margin-right: 10px;float: right;"><i class="fa-solid fa-child-reaching" style="margin-right: 8px;"></i>Body</div>
-    </div>
+    </div> -->
     <div id="leftSide" style="display: none;width: 50%;">
       <div id="listCol" style="width: 100%;display: inline-block;vertical-align: top;border-right: black solid 1px;padding-bottom: 10px;height: 50%;"> 
         <div class="dropdown" style="background-color: lightgrey;">
@@ -803,6 +815,24 @@
 
       $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
         $(n).css('visibility', 'hidden');
+      });
+
+      $('#mobileSelect').empty();
+      dataList.map(function(item, i) {
+        if (item.type == 'block') {
+          $('#mobileSelect').append($('<option value="'+i+'">'+item.names.map(function(blockName) {
+            return blocks[blockName].name;
+          }).join(' + ')+'</option>'))
+        }
+      });
+      if (dataList.length == 0) $('#mobileSelect').append($('<option value="0">Click to Select Block</option>'));
+      $('#mobileSelect').val(selected);
+
+      $('#mobileSelect').unbind('change').on('change', function() {
+        var index = parseInt($(this).val());
+        if (index == selected) selected = null;
+        else selected = index;
+        refresh();
       });
 
       $('#dataList').toggle(state.listType != 'map');
