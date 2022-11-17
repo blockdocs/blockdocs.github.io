@@ -462,7 +462,7 @@
           '<b>Complications:</b> Hematoma, Infection, Damage to the LFCN causing paresthesias and numbness<br><br>'+
           '<b>Dosing:</b> Brown Atlas of Regional Anesthesia - 10-15cc of local anesthetic, 0.5-0.75% bupivacaine or lidocaine, 0.25% bupivacaine or 0.2% ropivacaine<br><br>',
         surgeries: 'Skin grafting of the lateral thigh',
-        coverage: []
+        coverage: ['f_latFemC', 'b_latFemC']
       },
       'saph': {
         name: 'Mid-thigh Adductor Canal (Saphenous) Nerve Block',
@@ -474,7 +474,7 @@
           '<b>Considerations:</b> Evidence suggesting that patients who received adductor canal block catheters for postop analgesia were able to ambulate further on POD#1 s/p TKA compared to those with femoral nerve block or no block.<br><br>'+
           '<b>Dosing:</b> UTD - Typical injection of 10-15 mL of local anesthetic. Typical choice of 0.2% ropivacaine or 0.24% bupivacaine<br><br>',
         surgeries: 'TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair, Below Knee Amputation (combined with Proximal Sciatic Block)',
-        coverage: []
+        coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC']
       },
       'btkSaph': {
         name: 'Below the Knee Saphenous Nerve Block',
@@ -486,7 +486,7 @@
           '<b>Considerations:</b> Mostly a sensory block, however use caution when injecting large volume of local anesthetic, which can cause a motor block of the vastus medialis muscle. Typically avoid in tibial plateau fractures.<br><br>'+
           '<b>Dosing:</b> Consider 15-20 cc of choice local anesthetics<br><br>',
         surgeries: 'Surgery of the medial malleolus, Skin grafting of the medial lower leg',
-        coverage: []
+        coverage: ['f_saph', 'b_saph', 'b_saph_foot']
       },
       'obturator': {
         name: 'Obturator Nerve Block',
@@ -498,7 +498,7 @@
           '<b>Considerations:</b> Most effective when combined with sciatic, femoral, and LFCN blocks for lower extremity surgery.<br><br>'+
           '<b>Dosing:</b> Brown et al - If motor block is not necessary, lower concentrations of local anesthetic recommended, 8-10 cc of 0.75-1.0% lidocaine or mepivacaine, 0.25% bupivacaine, 0.2% ropivacaine.<br><br>',
         surgeries: 'TURP in additional to spinal anesthesia, Surgery of the medial distal thigh.',
-        coverage: []
+        coverage: ['f_obt', 'b_obt']
       },
       'popFoss': {
         name: 'Popliteal Fossa Block',
@@ -510,7 +510,7 @@
           '<b>Considerations:</b> Can be used in conjunction with a saphenous/femoral nerve block for complete anesthesia below the knee<br><br>'+
           '<b>Dosing:</b> Brown et al - Lower concentrations of local anesthetic are effective as this is primarily a sensory block. Consider 1% lidocaine or mepivacaine, 0.25-0.5% bupivacaine or 0.2-0.5% ropivacaine.<br><br>',
         surgeries: '',
-        coverage: []
+        coverage: ['f_sural', 'b_sural', 'b_sural_foot', 'b_supPer', 'f_supPer', 'f_deepPer', 'b_tib_foot', 'b_medPlant_foot', 'b_latPlant_foot', 'b_latPlant2_foot']
       },
 
       // Neuraxial
@@ -1016,7 +1016,7 @@
         });
       }
 
-      if (surgerySearchBox != null) {
+      if (surgerySearchBox != null && !opts.noSurgeryRefresh) {
         surgerySearchBox.list = surgeries.map(function(data, surgery_i) {
           return { name: surgery_i, filterText: data.name, type: 'surgery', label: data.name };
         }).concat(keys(blocks).map(function(blockName) {
@@ -1125,6 +1125,33 @@
         }
 
         refresh();
+      });
+      surgerySearchBox.container.addEventListener("awesomplete-highlight", function(data) {
+        // $('#surgerySearch').val('');
+        var value = data.text.value;
+        dataList = [];
+
+        if (value.type == 'surgery') {
+          var data = surgeries[value.name];
+          selected = dataList.length;
+          var surgItem = { type: 'surgery', name: value.name  };
+          if (data.blocks.length == 1) surgItem.names = data.blocks[0];
+          addToList(surgItem);
+          data.blocks.map(function(blockNames) {
+            addToList({
+              type: 'block',
+              names: blockNames
+            });
+          });
+          if (selected >= dataList.length) selected = dataList.length - 1;
+        } else if (value.type == 'block') {
+          var data = blocks[value.name];
+          selected = dataList.length;
+          addToList({ type: 'block', names: [value.name] });
+          if (selected >= dataList.length) selected = dataList.length - 1;
+        }
+
+        refresh({ noSurgeryRefresh: true });
       });
 
       blockSearchBox = new Awesomplete($('#blockSearch')[0], {
