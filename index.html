@@ -45,7 +45,7 @@
     <div id="mobileTop" style="width: 100%;background-color: lightgrey;font-size: 21px;display: block;">
       <div style="display: inline-block; width: 100%; margin-bottom: 5px;">
         <i class="fa-solid fa-bars listJump" data-type="list" style="padding-right: 8px;padding-left: 10px;padding-top: 14px;vertical-align: top; cursor: pointer;"></i>
-        <select id="mobileSelect" class="form-control" style="width: calc(100% - 50px);display: inline-block;vertical-align: middle;margin-top: 6px;">
+        <select id="mobileSelect" class="form-control" style="width: calc(100% - 100px);display: inline-block;vertical-align: middle;margin-top: 6px;">
         </select>
         <i class="fa-solid fa-search searchJump" data-type="list" style="padding-right: 8px;padding-left: 10px;padding-top: 14px;vertical-align: top; cursor: pointer;"></i>
       </div>
@@ -818,6 +818,14 @@
         refresh();
         updateLayout();
       });
+      $('.searchJump').unbind('click').click(function() {
+        state.pane = 'list';
+        state.listType = 'custom';
+        saveState();
+        refresh();
+        updateLayout();
+        $('#blockSearch').focus();
+      });
 
       $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
         $(n).css('visibility', 'hidden');
@@ -831,8 +839,8 @@
           }).join(' + ')+'</option>'))
         }
       });
-      if (dataList.length == 0) $('#mobileSelect').append($('<option value="0">Click Body to Select Block</option>'));
-      $('#mobileSelect').val(selected);
+      if (dataList.length == 0 || selected == null) $('#mobileSelect').append($('<option value="-1">Click Body to Select Block</option>'));
+      $('#mobileSelect').val(selected == null ? -1 : selected);
 
       $('#mobileSelect').unbind('change').on('change', function() {
         var index = parseInt($(this).val());
