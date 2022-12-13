@@ -1190,7 +1190,7 @@
           var includedBlocks = groupSets[groupItem.groupName];
           if (includedBlocks.length == 0) return;
 
-          var openGroup = !!openBlockGroups[groupItem.groupName] || query.length > 0;
+          var openGroup = !!openBlockGroups[groupItem.groupName] || query.length > 0 || (filteredBlockIndex != null && filteredBlockIndex >= index && filteredBlockIndex < index + includedBlocks.length);
 
           $('#folders').append($(''+
           '<div class="blockGroup" data-index="'+i+'" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px;cursor: pointer;border: white solid 2px;">'+
@@ -1304,7 +1304,6 @@
         }
       }
 
-
       $('.dataRow').unbind('click').click(function() {
         var index = getProp(this, 'index');
         if (index == filteredBlockIndex) filteredBlockIndex = null;
@@ -1403,7 +1402,8 @@
       if (e.keyCode == '40') { // Down
         var surgeryResult = surgeries[selectedSurgery];
         if (surgeryResult != null) selectedSurgeryBlockIndex = Math.min(surgeryResult.blocks.length - 1, selectedSurgeryBlockIndex + 1);
-        filteredBlockIndex = Math.min(filteredBlockList.length - 1, filteredBlockIndex + 1);
+        if (filteredBlockIndex == null) filteredBlockIndex = 0;
+        else filteredBlockIndex = Math.min(filteredBlockList.length - 1, filteredBlockIndex + 1);
         refresh();
       } else if (e.keyCode == '38') { // Up
         filteredBlockIndex = Math.max(0, filteredBlockIndex - 1);
@@ -1421,7 +1421,7 @@
           $(n).css('visibility', '');
           $(n).css('fill', '#0998a8');
         });
-      })
+      });
 
       $('#clear').click(function() {
         selectedBlocks = {};
