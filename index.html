@@ -12,7 +12,7 @@
   <script src="./res/js/utilities.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <link rel="icon" type="image/png" href="/favicon.ico" />
+  <link rel="icon" type="image/png" href="./favicon.ico" />
   <link rel="apple-touch-icon" href="favicon.ico">
   <link rel="stylesheet" href="./res/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="./res/css/awesomplete.css">
@@ -62,7 +62,7 @@
     <div id="leftSide" style="display: none;width: 50%;">
       <div id="listCol" style="width: 100%;display: inline-block;vertical-align: top;border-right: black solid 1px;padding-bottom: 10px;height: 50%;"> 
         <div class="dropdown" style="background-color: lightgrey;">
-          <div class="dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: calc(100% - 85px);padding: 10px;padding-left: 20px;display: inline-block;cursor: pointer;">
+          <div class="dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: calc(100% - 85px);padding: 10px;padding-left: 15px;display: inline-block;cursor: pointer;">
             <i id="listIcon" class="fa-solid fa-bars" style="margin-right: 10px;width: 14px; display: inline-block;"></i>
             <span id="listTitle">Blocks by Surgery</span>
           </div>
@@ -70,10 +70,9 @@
             <i class="fa-solid fa-eraser" style="margin-left: 7px;"></i>
           </div>
           <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(5px, 44px, 0px); top: 0px; left: 0px; will-change: transform;">
+            <a class="dropdown-item listOption" data-type="custom" href="#">All Blocks</a>
+            <a class="dropdown-item listOption" data-type="map" href="#">Blocks by Nerve</a>
             <a class="dropdown-item active listOption" data-type="surgery" href="#">Blocks by Surgery</a>
-            <a class="dropdown-item listOption" data-type="location" href="#">Blocks by Location</a>
-            <a class="dropdown-item listOption" data-type="custom" href="#">Block Combinations</a>
-            <a class="dropdown-item listOption" data-type="map" href="#">Blocks from Nerve Maps</a>
           </div>
         </div>
         <div style="overflow-y: scroll;height: calc(100% - 34px);">
@@ -84,7 +83,7 @@
                 <option value="brachial">Brachial Plexus</option>
               </select>
             </div>
-            <h5 id="mapTitle" style="padding-left: 10px;padding-right: 10px;text-align: center;padding-top: 10px;">Click or hover over a spot to block</h5>
+            <h5 id="mapTitle" style="padding-left: 10px;padding-right: 10px;text-align: center;padding-top: 10px;overflow-y: hidden;height: 35px;">Click or hover over a spot to block</h5>
             <div style="position: relative;width: calc(100% - 20px);margin-left: 10px;">
               <div id="mapSpotList">
                 <div class="mapSpot" data-block="isb" style="width: 1.5%;height: 37%;border-radius: 4px;left: 68%;top: 20%;transform: rotate(348deg);"></div>
@@ -98,16 +97,18 @@
               <img id="mapImg" src="" style="width: calc(100% - 20px);border: black 1px solid;border-radius: 10px;margin-top: 5px;margin-left: 10px;margin-right: 10px;margin-bottom: 5px;">
             </div>
           </div>
-          <div id="locationSection" style="display: none;">
+          <!-- <div id="locationSection" style="display: none;">
             <p style="margin-top: 5px; text-align: center; margin-left: 10px; margin-right: 10px;">Click on the body to see block options</p>
-          </div>
+          </div> -->
           <div id="surgerySection" style="display: none;">
             <input id="surgerySearch" class="form-control" placeholder="Surgery Search" style="margin: 5px;display: inline-block;">
           </div>
           <div id="customBlockSection" style="display: none;">
-            <input id="blockSearch" class="form-control" placeholder="Block Search" style="margin: 5px;display: inline-block;">
+            <input id="blockSearch" class="form-control" placeholder="Search Blocks" style="margin: 5px;display: inline-block;width: calc(100% - 10px);">
           </div>
-          <div id="dataList"></div>
+          <div id="folders"></div>
+          <div id="surgeryResults"></div>
+          <!-- <div id="dataList"></div> -->
         </div>
       </div><div id="notesCol" style="width: 100%;display: inline-block;vertical-align: top;border-right: black solid 1px;height: 50%;"> 
         <div id="notesTop" style="width: 100%;background-color: lightgrey;padding: 10px;">
@@ -176,24 +177,33 @@
       pane: 'body',
       bodySide: 'front',
       listType: 'custom'
-    }
+    };
+
     // if (localStorage.getItem('state') != null) state = JSON.parse(localStorage.getItem('state'));
     var saveState = function() {
       localStorage.setItem('state', JSON.stringify(state));
     };
 
-    // var pane = 'body'; // body, notes, list
     var panes = 'three';
-    // var bodySide = 'front'; // front, back
-    // var listType = 'custom'; // surgery, location, custom, map
 
+    var selectedBlocks = {}; // Keys: block name, value: true
+    var openBlockGroups = {}; // Keys: block group name, value: true
+    var locationSet = {}; // Blocks overlapping the location pin. Info about which side, etc in value.
+
+    var filteredBlockList = []; // block name list
+    var filteredBlockIndex = null;
+    // var filteredBlockSet = {}; // Keys: block name, value: true
+
+    var selectedSurgery = null;
+    var selectedSurgeryBlockIndex = 0;
+
+    var backgroundBlocks = {};
+    var foregroundBlocks = {};
+
+    var mapChoice = 'brachial'; // brachial, lumbar, etc
     var mapClickBlock = null;
     var mapHoverBlock = null;
 
-    var selected = 0;
-    var dataList = [];
-
-    var mapChoice = 'brachial';
     var mapList = [{
       id: 'brachial',
       name: 'Brachial Plexus',
@@ -255,6 +265,25 @@
       'f_T1': 'front,path15776',
       'f_T2': 'front,path15893',
 
+      'f_T3': 'front,path14692',
+      'f_T4': 'front,path14731',
+      'f_T5': 'front,path14770',
+      'f_T6': 'front,path14809',
+      'f_T7': 'front,path14575',
+      'f_T8': 'front,path14536',
+      'f_T9': 'front,path14497',
+      'f_T10': 'front,path14458',
+      'f_T11': 'front,path14419',
+      'f_T12': 'front,path14380',
+      'f_L1': 'front,path14263',
+      'f_L2': 'front,path14224',
+      'f_L3': 'front,path16445',
+      'f_L4': 'front,path16328',
+      'f_L5': 'front,path16406',
+      'f_S1': 'front,path16367',
+      'f_S2': 'front,path14302',
+      'f_S3': 'front,path14341',
+
       'f_rect': 'front,path1541',
 
       'b_medAbc': 'back,path10344',
@@ -279,6 +308,30 @@
       'b_C4': 'back,path3160',
       'b_C3': 'back,path3236',
       'b_C2': 'back,path17867',
+
+      'b_T4': 'back,path5437',
+      'b_T5': 'back,path5398',
+      'b_T6': 'back,path15511',
+      'b_T7': 'back,path15550',
+      'b_T8': 'back,path15589',
+      'b_T9': 'back,path15628',
+      'b_T10': 'back,path15667',
+      'b_T11': 'back,path15784',
+      'b_T12': 'back,path15823',
+      'b_L1': 'back,path15862',
+      'b_L2': 'back,path15901',
+      'b_L3med': 'back,path16172',
+      'b_L3lat': 'back,path16055',
+      'b_L4': 'back,path16289',
+      'b_L5': 'back,path16211',
+      'b_S1': 'back,path16250',
+      'b_S2': 'back,path16094',
+      'b_S3': 'back,path16133',
+
+      'b_L5med_foot': 'back,path14107',
+      'b_L5lat_foot': 'back,path14185',
+      'b_L4_foot': 'back,path14146',
+      'b_S1_foot': 'back,path14068',
 
       'f_latFemC': 'front,path12743',
       'f_antFemC': 'front,path12782',
@@ -323,6 +376,26 @@
           '<b>Considerations:</b><br><br>'+
           '<b>Dosing:</b><br><br>';
 
+    var blockGroups = [{
+      groupName: 'Upper Extremity Blocks',
+      blocks: ['scp', 'isb', 'supraclavicular', 'axillary', 'infraclavicular', 'intercostobracial']
+    }, { 
+      groupName: 'Lower Extremity Blocks',
+      blocks: ['lumbarPlexus', 'fib', 'fem', 'saph', 'latFem', 'obturator', 'btkSaph', 'sciatic', 'popFoss']
+    }, {
+      groupName: 'Truncal Blocks',
+      blocks: []
+    }, {
+      groupName: 'Abdominal Blocks',
+      blocks: ['rectusSheath']
+    }, {
+      groupName: 'Neuraxial',
+      blocks: ['lumbEpi']
+    // }, {
+    //   groupName: 'Facial Blocks',
+    //   blocks: ['scalp']
+    }]
+
     var blocks = {
       // Brachial Plexus
       'isb': {
@@ -335,9 +408,11 @@
         '<b>Complications:</b> Total spinal anesthesia, epidural anesthesia, cervical spinal cord injection, vertebral artery injection, pneumothorax, phrenic nerve paralysis (100%), recurrent laryngeal nerve paralysis, Horner\'s syndrome<br><br>'+
         '<b>Considerations:</b> Avoid in patients with severe respiratory disease due to ipsilateral phrenic nerve block. Consider Infraclavicular block as an alternative.<br><br>'+
         '<b>Dosing:</b> 5-10 cc of choice local anesthetic for postoperative analgesia, 20-30cc recommended for surgical anesthesia. Greater volume of injected anesthetic may increased risk of ipsilateral phrenic nerve palsy<br><br>',
-        surgeries: 'Rotator Cuff Repair, Acromioplasty, Humerus fracture, Clavicular Fracture, Bankart\'s Repair, Laterjet, Proximal Humerus osteosynthesis, acromioclavicular resection, shoulder dislocation',
-        coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6', 'b_C7', 'f_C7', 'b_C2', 'f_C2', 'f_supClavLat' ],
-        syringe: { side: '65', top: '68', rotate: '278', bodySide: 'front' }
+        surgeries: 'Rotator Cuff Repair, Acromioplasty, Humerus Fracture, Clavicle Fracture, Bankart\'s Repair, Laterjet, Proximal Humerus Osteosynthesis, Acromioclavicular Resection, Shoulder Dislocation',
+        covList: [{
+          coverage: [ 'f_C4lat', 'f_C5', 'f_C6', 'b_C4', 'b_C5', 'b_C6', 'b_C7', 'f_C7', 'b_C2', 'f_C2', 'f_supClavLat' ],
+          syringe: { side: '65', top: '68', rotate: '278', bodySide: 'front' }
+        }]
       }, 
       'scp': {
         name: 'Superficial Cervical Plexus Block (SCP)',
@@ -350,8 +425,10 @@
           '<b>Considerations:</b> Randomized trials have failed to demonstrate a difference in analgesia between the superficial and deep cervical plexus blocks. This block will also cause hemidiaphragmatic paralysis, use in caution with patients with severe respiratory disease.<br><br>'+
           '<b>Dosing:</b> 5-15 cc of dilute local anesthetic recommended, 0.25% bupivacaine for example. <br><br>',
         surgeries: 'Carotid Endarterectomy, Neck Surgery (superficial)',
-        coverage: [ 'f_C2', 'f_C3', 'f_C4med2', 'f_C4med', 'f_C4lat', 'b_C2', 'b_C3', 'b_C3', 'b_C4' ],
-        syringe: { side: '65', top: '68', rotate: '278', bodySide: 'front' }
+        covList: [{
+          coverage: [ 'f_C2', 'f_C3', 'f_C4med2', 'f_C4med', 'f_C4lat', 'b_C2', 'b_C3', 'b_C3', 'b_C4' ],
+          syringe: { side: '65', top: '68', rotate: '278', bodySide: 'front' }
+        }]
       },
       'supraclavicular': {
         name: 'Supraclavicular Block',
@@ -363,9 +440,11 @@
         '<b>Complications:</b> Pneumothorax (highest risk), phrenic nerve block causing diaphragmatic paralysis (50%), Horner\'s Syndrome, intravascular injection, noncompressible hematoma<br><br>'+
         '<b>Considerations:</b> Although this block carries a lower risk of ipsilateral phrenic nerve palsy compared to the ISB, continue to exercise caution in patients with severe respiratory disease and inform patients of the possible post-block risk. For surgeries of the distal arm and hand, ensure proper spread of local anesthetic around the inferior trunks (so called "corner pocket".<br><br>'+
         '<b>Dosing:</b> 20-30 cc of 0.5% ropivacaine for postoperative analgesia, consider using 2% lidocaine or 1.5% mepivacaine for surgical anesthesia<br><br>',
-        surgeries: 'Distal Humerus fracture, Forearm surgery, Wrist Surgery, Arteriovenous Fistula',
-        coverage: [ 'f_C5', 'f_C6', 'f_C7', 'b_C5', 'b_C6', 'b_C7' ],
-        syringe: { side: '60', top: '86', rotate: '244', bodySide: 'front' }
+        surgeries: 'Distal Humerus Fracture, Forearm Surgery, Wrist Surgery, Arteriovenous Fistula',
+        covList: [{
+          coverage: [ 'f_C5', 'f_C6', 'f_C7', 'b_C5', 'b_C6', 'b_C7' ],
+          syringe: { side: '60', top: '86', rotate: '244', bodySide: 'front' }
+        }]
       }, 
       'infraclavicular': {
         name: 'Infraclavicular Block',
@@ -377,9 +456,11 @@
           '<b>Complications:</b> Intravascular injection, Axillary artery puncture, pectoral discomfort<br><br>'+
           '<b>Considerations:</b> Allows for more secure placement of a brachial plexus catheter compared to the supraclavicular block. Recent evidence demonstrating superior quality of analgesia with infraclavicular nerve catheters compared to supraclavicular or axillary.<br><br>'+
           '<b>Dosing:</b> 20-30 cc of 0.5% ropivacaine for postoperative analgesia, consider using 2% lidocaine or 1.5% mepivacaine for surgical anesthesia<br><br>',
-        surgeries: 'Forearm surgery, wrist surgery, arteriovenous fistula repair',
-        coverage: [ 'f_C7', 'f_C8', 'f_T1', 'b_C7', 'b_C8', 'b_T1' ],
-        syringe: { side: '55', top: '69', rotate: '316', bodySide: 'front' }
+        surgeries: 'Forearm Surgery, Wrist Surgery, Arteriovenous Fistula',
+        covList: [{ 
+          coverage: [ 'f_C7', 'f_C8', 'f_T1', 'b_C7', 'b_C8', 'b_T1' ],
+          syringe: { side: '55', top: '69', rotate: '316', bodySide: 'front' }
+        }]
       }, 
       'axillary': {
         name: 'Axillary Block',
@@ -391,14 +472,18 @@
           '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection<br><br>'+
           '<b>Considerations:</b> May serve as an optimal block site for patients who are being actively anticoagulated. The axilla is a compressible site in the case of unexpected vascular puncture and subsequent hematoma formation.<br><br>'+
           '<b>Dosing:</b> 20-30cc of choice local anesthetic, deposited primarily between the axillary artery and posterior cord. Consider 0.5% ropivacaine if long acting postoperative analgesia desired.<br><br>',
-        surgeries: 'Surgery of arm, forearm, wrist',
-        coverage: [ 'f_C6', 'f_C7', 'f_C8', 'f_T1', 'b_C6', 'b_C7', 'b_C8', 'b_T1' ],
-        syringe: { side: '38', top: '102', rotate: '270', bodySide: 'front' }
+        surgeries: 'Arm Surgery, Forearm Surgery, Wrist Surgery',
+        covList: [{ 
+          coverage: [ 'f_C6', 'f_C7', 'f_C8', 'f_T1', 'b_C6', 'b_C7', 'b_C8', 'b_T1' ],
+          syringe: { side: '38', top: '102', rotate: '270', bodySide: 'front' }
+        }]
       },
       'intercostobracial': {
         name: 'Intercostobrachial Block',
         notes: '',
-        coverage: [ 'f_icb', 'b_icb' ]
+        covList: [{ 
+          coverage: [ 'f_icb', 'b_icb' ]
+        }]
       },
 
       // Wrist
@@ -427,22 +512,11 @@
           '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis<br><br>'+
           '<b>Complications:</b> Retroperitoneal hematoma, Vascular puncture of major vessels (aorta, IVC, etc), Intravascular injection, hemodynamic compromise (due to unilateral sympathectomy), Epidural injection, Intrathecal injection, Renal hematoma<br><br>'+
           '<b>Dosing:</b> Consider 20-30cc of local anesthetic. 0.5-0.75% ropivacaine for surgical anesthesia with postoperative analgesia. <br><br>',
-        surgeries: 'Femoral shaft and neck fractures, knee procedures, and procedures involving the anterior thigh',
-        coverage: ['f_latFemC', 'f_antFemC', 'f_obt', 'f_saph', 'b_latFemC', 'b_obt', 'b_medCut', 'b_saph', 'b_tib', 'b_medCut_foot', 'b_saph_foot', 'b_tib_foot','b_medPlant_foot'],
-        syringe: { side: '70', top: '223', rotate: '226', bodySide: 'back' }
-      },
-      'sciatic': {
-        name: '(Proximal) Sciatic Nerve Block',
-        notes: '<b>Sensory Coverage:</b> Distal Portion of the Posterior Femur, All bones below the knee (except for the medial malleolus and medial tibial plateau)<br><br>'+
-          '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia for procedures between the mid-thigh to the knee..<br><br>'+
-          '<b>Indications:</b> Surgery of the distal upper leg and knee<br><br>'+
-          '<b>Common Surgeries:</b> Distal Femur ORIF, tibial plateau fracture, Tibial intramedullary nail, Below Knee Amputation (combined with Adductor Canal Block), Ankle ORIF (Combine with Distal Saphenous Block),  Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal),  Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with Distal Saphenous Block)<br><br>'+
-          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, bedsore, <br><br>'+
-          '<b>Complications:</b> Hematoma, Infection, Post operative weakness leading to falls (due to hamstring weakness and/or foot drop)<br><br>'+
-          '<b>Dosing:</b> Brown Atlas of Regional Anesthesia: 20-25cc of local anesthetic. Consider 1.5% bupivacaine or lidocaine if motor block is desired. 0.5% bupivacaine or 0.5-0.75% ropi for surgical anesthesia with postoperative analgesia<br><br>',
-        surgeries: 'Distal Femur ORIF, tibial plateau fracture, Tibial intramedullary nail, Below Knee Amputation (combined with Adductor Canal Block), Ankle ORIF (Combine with Distal Saphenous Block),  Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal),  Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with Distal Saphenous Block)',
-        coverage: ['f_supPer', 'f_deepPer', 'f_sural', 'f_latCutCalf', 'b_sural', 'b_supPer', 'b_postFemCut', 'b_sural_foot', 'b_latPlant_foot', 'b_latPlant2_foot'],
-        syringe: { side: '70', top: '236', rotate: '255', bodySide: 'back' }
+        surgeries: 'Femoral Shaft and Neck Fractures, Knee Procedures, Anterior Thigh Surgeries',
+        covList: [{ 
+          coverage: ['f_latFemC', 'f_antFemC', 'f_obt', 'f_saph', 'b_latFemC', 'b_obt', 'b_medCut', 'b_saph', 'b_tib', 'b_medCut_foot', 'b_saph_foot', 'b_tib_foot','b_medPlant_foot'],
+          syringe: { side: '70', top: '223', rotate: '226', bodySide: 'back' }
+        }]
       },
       'fib': {
         name: '"3 in 1" Fascia Iliaca Nerve Block',
@@ -452,8 +526,10 @@
           '<b>Contraindications:</b> Patient Refusal, severe coagulopathy, infection at block site, previous femoral bypass surgery, sepsis,allergy to local anesthetic<br><br>'+
           '<b>Complications:</b> Small risk of hematomas in the injection site and low risk of local anesthetic toxicity. Case reports of pneumoretroperitoneum with continuous infusion, bladder puncture with a modified block under very special conditions, and postoperative neuropathy.<br><br>'+
           '<b>Dosing: Large volume of local anesthetic needed, 20-40 cc of choice local anesthetic, 0.5-0.75% ropivacaine.Take caution not to exceed maximum dose ropivacaine 3 mg/kg.</b><br><br>',
-        surgeries: 'Hip fractures in adults, Hip Arthroscopy, Hip Arthroplasty, Hip ORIF, Acetabulum ORIF (pair with femoral and/or neuraxial), femoral fractures in children',
-        coverage: ['f_latFemC', 'f_antFemC', 'b_latFemC', 'b_postFemCut', 'f_saph', 'b_medCut', 'b_saph']
+        surgeries: 'Hip Fracture in Adult, Hip Arthroscopy, Hip Arthroplasty, Hip ORIF, Acetabulum ORIF, Femoral Fractures in Children',
+        covList: [{ 
+          coverage: ['f_latFemC', 'f_antFemC', 'b_latFemC', 'b_postFemCut', 'f_saph', 'b_medCut', 'b_saph']
+        }]
       },
       'fem': {
         name: 'Femoral Nerve Block',
@@ -464,9 +540,11 @@
           '<b>Complications:</b> Infection, Hematoma, Damage to the Femoral Nerve, Postoperative weakness, inability to bear weight postoperatively (significant quadriceps weakness)<br><br>'+
           '<b>Technique:</b> Inject slightly inferior to the inguinal ligament, and the nerve is under the fascia iliaca.<br><br>'+
           '<b>Dosing:</b> Moderate volume of local anesthetic, 15-20cc of 0,5% ropivacaine. <br><br>',
-        surgeries: 'Anterior cruciate ligament repair, Total knee arthroplasty, patella surgery, quadriceps tendon repair. Acetabulum ORIF (pair with femoral and/or neuraxial), Femur, anterior thigh, and knee surgery, Femoral Shaft ORIF, Anterior Thigh Skin Graft,  Patellar ORIF, Patella Surgery',
-        coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC'],
-        syringe: { side: '66', top: '273', rotate: '223', bodySide: 'front' }
+        surgeries: 'Anterior Cruciate Ligament Repair, TKA (Total Knee Arthroplasty), Patella Surgery, Quadriceps Tendon Repair. Acetabulum ORIF, Femur, Anterior Thigh Surgery, Knee Surgery, Femoral Shaft ORIF, Anterior Thigh Skin Graft, Patellar ORIF',
+        covList: [{ 
+          coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC'],
+          syringe: { side: '66', top: '273', rotate: '223', bodySide: 'front' }
+        }]
       },
       'latFem': {
         name: 'Lateral Femoral Cutaneous Nerve Block',
@@ -476,11 +554,28 @@
           '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, allergy to local anesthetic, any concern for compartment syndrome<br><br>'+
           '<b>Complications:</b> Hematoma, Infection, Damage to the LFCN causing paresthesias and numbness<br><br>'+
           '<b>Dosing:</b> Brown Atlas of Regional Anesthesia - 10-15cc of local anesthetic, 0.5-0.75% bupivacaine or lidocaine, 0.25% bupivacaine or 0.2% ropivacaine<br><br>',
-        surgeries: 'Skin grafting of the lateral thigh',
-        coverage: ['f_latFemC', 'b_latFemC']
+        surgeries: 'Skin Grafting of the Lateral Thigh',
+        covList: [{ 
+          coverage: ['f_latFemC', 'b_latFemC']
+        }]
+      },
+      'sciatic': {
+        name: '(Proximal) Sciatic Nerve Block',
+        notes: '<b>Sensory Coverage:</b> Distal Portion of the Posterior Femur, All bones below the knee (except for the medial malleolus and medial tibial plateau)<br><br>'+
+          '<b>Description:</b> A lower extremity block that can provide anesthesia or analgesia for procedures between the mid-thigh to the knee..<br><br>'+
+          '<b>Indications:</b> Surgery of the distal upper leg and knee<br><br>'+
+          '<b>Common Surgeries:</b> Distal Femur ORIF, tibial plateau fracture, Tibial intramedullary nail, Below Knee Amputation (combined with Adductor Canal Block), Ankle ORIF (Combine with Distal Saphenous Block),  Ankle Arthroplasty (Combine with Distal Saphenous Block), Metatarsal ORIF (Combine with Distal Saphenous Block for 1st metatarsal),  Hallux Valgus Deformity Correction, Transmetatarsal Amputation (Combine with Distal Saphenous Block)<br><br>'+
+          '<b>Contraindications:</b> Patient refusal, severe coagulopathy, infection at block site, sepsis, bedsore, <br><br>'+
+          '<b>Complications:</b> Hematoma, Infection, Post operative weakness leading to falls (due to hamstring weakness and/or foot drop)<br><br>'+
+          '<b>Dosing:</b> Brown Atlas of Regional Anesthesia: 20-25cc of local anesthetic. Consider 1.5% bupivacaine or lidocaine if motor block is desired. 0.5% bupivacaine or 0.5-0.75% ropi for surgical anesthesia with postoperative analgesia<br><br>',
+        surgeries: 'Distal Femur ORIF, Tibial Plateau Fracture, Tibial Intramedullary Nail, Ankle ORIF, Ankle Arthroplasty, Metatarsal ORIF, Hallux Valgus Deformity Correction, Transmetatarsal Amputation',
+        covList: [{ 
+          coverage: ['f_supPer', 'f_deepPer', 'f_sural', 'f_latCutCalf', 'b_sural', 'b_supPer', 'b_postFemCut', 'b_sural_foot', 'b_latPlant_foot', 'b_latPlant2_foot'],
+          syringe: { side: '70', top: '236', rotate: '255', bodySide: 'back' }
+        }]
       },
       'saph': {
-        name: 'Mid-thigh Adductor Canal (Saphenous) Nerve Block',
+        name: 'Mid-thigh Adductor Canal (Saphenous) Block',
         notes: '<b>Description:</b> A lower extremity nerve block that can provide anesthesia or analgesia to the knee, medial lower leg, and ankle. Commonly used in place of a femoral block for knee surgery when motor block is not desired.<br><br>'+
           '<b>Indications:</b> Surgery of the knee and medial lower leg <br><br>'+
           '<b>Common Surgeries:</b> TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair, Below Knee Amputation (combined with Proximal Sciatic Block)<br><br>'+
@@ -488,9 +583,11 @@
           '<b>Complications:</b> Hematoma, Infection, Damage to the saphenous nerve, motor weakness, <br><br>'+
           '<b>Considerations:</b> Evidence suggesting that patients who received adductor canal block catheters for postop analgesia were able to ambulate further on POD#1 s/p TKA compared to those with femoral nerve block or no block.<br><br>'+
           '<b>Dosing:</b> UTD - Typical injection of 10-15 mL of local anesthetic. Typical choice of 0.2% ropivacaine or 0.24% bupivacaine<br><br>',
-        surgeries: 'TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair, Below Knee Amputation (combined with Proximal Sciatic Block)',
-        coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC'],
-        syringe: { side: '78', top: '294', rotate: '223', bodySide: 'front' }
+        surgeries: 'TKA (Total Knee Arthroplasty), Anterior Cruciate Ligament (ACL) Repair',
+        covList: [{ 
+          coverage: ['f_saph', 'b_saph', 'b_saph_foot', 'f_antFemC'],
+          syringe: { side: '78', top: '294', rotate: '223', bodySide: 'front' }
+        }]
       },
       'btkSaph': {
         name: 'Below the Knee Saphenous Nerve Block',
@@ -501,8 +598,10 @@
           '<b>Complications:</b> Hematoma, Infection, Damage to the saphenous nerve causing paresthesias<br><br>'+
           '<b>Considerations:</b> Mostly a sensory block, however use caution when injecting large volume of local anesthetic, which can cause a motor block of the vastus medialis muscle. Typically avoid in tibial plateau fractures.<br><br>'+
           '<b>Dosing:</b> Consider 15-20 cc of choice local anesthetics<br><br>',
-        surgeries: 'Surgery of the medial malleolus, Skin grafting of the medial lower leg',
-        coverage: ['f_saph', 'b_saph', 'b_saph_foot']
+        surgeries: 'Medial Malleolus Surgery, Skin Grafting of the Medial Lower Leg',
+        covList: [{ 
+          coverage: ['f_saph', 'b_saph', 'b_saph_foot']
+        }]
       },
       'obturator': {
         name: 'Obturator Nerve Block',
@@ -513,9 +612,11 @@
           '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection<br><br>'+
           '<b>Considerations:</b> Most effective when combined with sciatic, femoral, and LFCN blocks for lower extremity surgery.<br><br>'+
           '<b>Dosing:</b> Brown et al - If motor block is not necessary, lower concentrations of local anesthetic recommended, 8-10 cc of 0.75-1.0% lidocaine or mepivacaine, 0.25% bupivacaine, 0.2% ropivacaine.<br><br>',
-        surgeries: 'TURP in additional to spinal anesthesia, Surgery of the medial distal thigh.',
-        coverage: ['f_obt', 'b_obt'],
-        syringe: { side: '74', top: '273', rotate: '223', bodySide: 'front' }
+        surgeries: 'TURP, Surgery of the Medial Distal Thigh.',
+        covList: [{ 
+          coverage: ['f_obt', 'b_obt'],
+          syringe: { side: '74', top: '273', rotate: '223', bodySide: 'front' }
+        }]
       },
       'popFoss': {
         name: 'Popliteal Fossa Block',
@@ -526,58 +627,72 @@
           '<b>Complications:</b> Hematoma, Vascular puncture, intravascular injection, foot drop from prolonged motor block <br><br>'+
           '<b>Considerations:</b> Can be used in conjunction with a saphenous/femoral nerve block for complete anesthesia below the knee<br><br>'+
           '<b>Dosing:</b> Brown et al - Lower concentrations of local anesthetic are effective as this is primarily a sensory block. Consider 1% lidocaine or mepivacaine, 0.25-0.5% bupivacaine or 0.2-0.5% ropivacaine.<br><br>',
-        surgeries: '',
-        coverage: ['f_sural', 'b_sural', 'b_sural_foot', 'b_supPer', 'f_supPer', 'f_deepPer', 'b_tib_foot', 'b_medPlant_foot', 'b_latPlant_foot', 'b_latPlant2_foot'],
-        syringe: { side: '70', top: '338', rotate: '226', bodySide: 'back' }
+        surgeries: 'Ankle Arthroplasty, Metatarsal ORIF, Hallux Valgus Deformity Correction, Transmetatarsal Amputation',
+        covList: [{ 
+          coverage: ['f_sural', 'b_sural', 'b_sural_foot', 'b_supPer', 'f_supPer', 'f_deepPer', 'b_tib_foot', 'b_medPlant_foot', 'b_latPlant_foot', 'b_latPlant2_foot'],
+          syringe: { side: '70', top: '338', rotate: '226', bodySide: 'back' }
+        }]
+      },
+
+      // Thoracic Wall
+      'rectusSheath': {
+        name: 'Rectus Sheath Block',
+        notes: '',
+        covList: [{
+          coverage: [ 'f_rect']
+        }]
       },
 
       // Neuraxial
-      // 'lumbEpi': {
-      //   name: 'Lumbar Epidural',
-      //   notes: '',
-      //   coverage: []
-      // },
+      'lumbEpi': {
+        name: 'Lumbar Spinal / Epidural',
+        notes: '',
+        covList: [{
+          bilateral: true,
+          coverage: [
+            'f_T7', 'f_T8', 'f_T9', 'f_T10', 'f_T11', 'f_T12', 'f_L1', 'f_L2', 'f_L3', 'f_L4', 'f_L5', 'f_S1', 'f_S2', 'f_S3',
+            'b_T7', 'b_T8', 'b_T9', 'b_T10', 'b_T11', 'b_T12', 'b_L1', 'b_L2', 'b_L3med', 'b_L3lat', 'b_L4', 'b_L5', 'b_S1', 'b_S2', 'b_S3', 
+            'b_L5med_foot', 'b_L5lat_foot', 'b_L4_foot', 'b_S1_foot',
+          ],
+          syringe: { side: '128', top: '193', rotate: '135', bodySide: 'back' }
+        }]
+      },
       // 'thorEpi': {
       //   name: 'Thoracic Epidural',
       //   notes: '',
       //   coverage: []
       // },
 
-      // // Thoracic Wall
-      // 'rectusSheath': {
-      //   name: 'Rectus Sheath Block',
-      //   notes: '',
-      //   coverage: [ 'f_rect']
-      // },
-
       // Cranial
       'scalp': {
         name: 'Occipital Nerve Block',
         notes: '',
-        coverage: ['f_triOpht', 'f_triMax', 'f_triMand']
+        covList: [{ 
+          coverage: ['f_triOpht', 'f_triMax', 'f_triMand']
+        }]
       },
-
     };
 
+    // <p style="margin-bottom: 0px; margin-top: 5px;"></p>
     var surgeries = [{
       name: 'Clavicle Fracture',
-      notes: '<b>Catheter vs Single Shot:</b> Single Shot or Catheter<br><br>'+
-      '<b>Dosing:</b> Ropivacaine 0.5% 4-5 mL at SCP and 10-20mL for ISB<br><br>'+
-      '<b>Infusion Rate:</b> Bupivacaine 0.125% @ 6 mL per hour<br><br>',
+      notes: ['Catheter vs Single Shot:  Single Shot or Catheter',
+        'Dosing: Ropivacaine 0.5% 4-5 mL at SCP and 10-20mL for ISB',
+        'Infusion Rate: Bupivacaine 0.125% @ 6 mL per hour'],
       blocks: [
         ['scp', 'isb']
       ]
     }, {
       name: 'Total or Partial Shoulder',
-      notes: '<b>Catheter vs Single Shot:</b> Single Shot or Catheter<br><br>'+
-      '<b>Dosing:</b> Ropivacaine 0.5% 20 mL or Bupivicaine 0.375% 20mL<br><br>'+
-      '<b>Infusion Rate:</b> Bupivacaine 0.125% @ 6 mL per hour<br><br>',
+      notes: ['Catheter vs Single Shot: Single Shot or Catheter',
+        'Dosing: Ropivacaine 0.5% 20 mL or Bupivicaine 0.375% 20mL',
+        'Infusion Rate: Bupivacaine 0.125% @ 6 mL per hour'],
       blocks: [
         ['isb']
       ]
     }, {
       name: 'Proximal humerous fracture',
-      notes: 'Avoid unless the surgeon agrees. Concern for radial nerve damage.',
+      notes: ['Avoid unless the surgeon agrees. Concern for radial nerve damage.'],
       blocks: []
     }, {
       name: 'Distal Humerus Fracture',
@@ -588,7 +703,6 @@
       ]
     }, {
       name: 'Forearm or Wrist',
-      notes: '',
       blocks: [
         ['supraclavicular', 'intercostobracial'],
         ['axillary'],
@@ -596,12 +710,42 @@
       ]
     }, {
       name: 'Awake Craniotomy',
-      notes: '<b>Catheter vs Single Shot:</b> Single Shot<br><br>'+
-          '<b>Dosing:</b> Bupivacaine 0.25% 3-5mL per site<br><br>',
+      notes: ['Catheter vs Single Shot: Single Shot',
+          'Dosing: Bupivacaine 0.25% 3-5mL per site'],
       blocks: [
         ['scalp']
       ]
+    }, {
+      name: 'Below Knee Amputation',
+      blocks: [
+        ['sciatic', 'saph']
+      ]
     }];
+
+    for (var blockName in blocks) {
+      (blocks[blockName].surgeries || '').split(',').map(function(surgeryName) {
+        var name = surgeryName.trim();
+        if (name.length > 0) {
+          var existingSurgery = surgeries.find(function(surgObj) {
+            return surgObj.name == name;
+          });
+          if (existingSurgery != null) {
+            if (!existingSurgery.blocks.some(function(blockGroup) {
+              return blockGroup.indexOf(blockName) >= 0;
+            })) {
+              existingSurgery.blocks.push([blockName])
+            }
+          } else {
+            surgeries.push({
+              name: name,
+              blocks: [
+                [ blockName ]
+              ]
+            });
+          }
+        }
+      })
+    }
 
     var middle = 500;
     var flip = {
@@ -609,8 +753,8 @@
       'back': 117
     }
     var defaultSides = {
-      'front,layer10': 'right', // Front Dermatome
-      'front,layer9': 'left', // Front Cutaneous nerves
+      'front,layer10': 'left', // Front Dermatome
+      'front,layer9': 'right', // Front Cutaneous nerves
       'back,layer10': 'right', // Back Dermatome
       'back,layer9': 'left' // Back Cutaneous nerves
     };
@@ -677,7 +821,7 @@
     var alreadyShown = {};
 
     // Draw a circle where clicked
-    var locationPt = null;
+    // var locationPt = null;
 
     var refreshEvents = function() {
       // Reverse lookup / paint
@@ -702,7 +846,7 @@
           // console.log(mainPt, flipPt)
 
           var side = 'left';
-          if (group == 'front') side = e.offsetX > middle ? 'right' : 'left';
+          if (group == 'front') side = e.offsetX > middle ? 'left' : 'right';
           else if (group == 'back') side = e.offsetX > middle ? 'right' : 'left';
 
           var contains = {};
@@ -727,26 +871,42 @@
             if (flipPt != null) checkPt(flipPt, true);
           });
 
-          // Test
-          state.listType = 'location';
+          state.listType = 'custom';
 
-          if (state.listType == 'location') {
+          if (state.listType == 'custom') {
             $('.locPt').remove();
             var actualPt = mainPt.matrixTransform(svg.getScreenCTM().inverse());
             $('#'+group + '> svg').append($('<circle stroke="black" fill="yellow" class="locPt" cx="'+actualPt.x+'" cy="'+actualPt.y+'" r="3"/>'))
 
-            dataList = [];
+            locationSet = {};
+            // dataList = [];
             for (var blockName in blocks) {
-              if (blocks[blockName].coverage.some(function(pathName) {
-                return contains[pathName] != null;
-              })) {
-                dataList.push({
-                  type: 'block',
-                  names: [blockName]
+              blocks[blockName].covList.some(function(covItem, covIndex) {
+                var pathMatch = covItem.coverage.find(function(pathName) {
+                  return contains[pathName] != null;
                 });
-              }
+                if (pathMatch != null) {
+                  locationSet[blockName] = {
+                    covIndex: covIndex,
+                    side: contains[pathMatch]
+                  };
+                  // dataList.push({
+                  //   type: 'block',
+                  //   names: [blockName],
+                  //   covIndex: covIndex,
+                  //   side: contains[pathMatch]
+                  // });
+                  return true; // Each block only once. Prioritize by order of covList if overlapping.
+                }
+              });
             }
-            if (dataList.length > 0) selected = 0;
+
+            if (!empty(locationSet)) {
+              $('#blockSearch').val('Location Pin');
+              filteredBlockIndex = 0;
+            }
+
+            // if (dataList.length > 0) selected = 0;
             refresh();
           } else {
             console.log('all contains', contains);
@@ -767,7 +927,7 @@
     };
 
     var surgerySearchBox = null;
-    var blockSearchBox = null;
+    // var blockSearchBox = null;
 
     var refresh = function(opts) {
       opts = opts || {};
@@ -777,9 +937,8 @@
 
       $('#listTitle').text(({
         'surgery': 'Blocks by Surgery',
-        'location': 'Blocks by Location',
-        'custom': 'Block Combinations',
-        'map': 'Blocks from Nerve Maps'
+        'custom': 'All Blocks',
+        'map': 'Blocks by Nerve'
       })[state.listType]);
       $('.listOption').removeClass('active').unbind('click').click(function() {
         state.listType = getProp(this, 'type');
@@ -791,9 +950,9 @@
       $('#surgerySection').toggle(state.listType == 'surgery');
       $('#mapSection').toggle(state.listType == 'map');
       $('#customBlockSection').toggle(state.listType == 'custom');
-      $('#locationSection').toggle(state.listType == 'location' && dataList.length == 0);
+      // $('#locationSection').toggle(state.listType == 'location' && dataList.length == 0);
 
-      if (state.listType != 'location') $('.locPt').remove();
+      if (state.listType != 'custom') $('.locPt').remove();
 
       $('#back').toggle(state.bodySide == 'back');
       $('#front').toggle(state.bodySide == 'front');
@@ -837,99 +996,40 @@
         $(n).css('visibility', 'hidden');
       });
 
-      if (state.listType == 'map') {
-        var focusId = mapHoverBlock || mapClickBlock;
-        if (blocks[focusId] != null) {
-          dataList = [{ type: 'block', names: [focusId]}];
-          selected = 0;
-        }
-      }
-
-
-      $('#mobileSelect').empty();
-      dataList.map(function(item, i) {
-        if (item.type == 'block') {
-          $('#mobileSelect').append($('<option value="'+i+'">'+item.names.map(function(blockName) {
-            return blocks[blockName].name;
-          }).join(' + ')+'</option>'))
-        }
-      });
-      if (dataList.length == 0 || selected == null) $('#mobileSelect').append($('<option value="-1">Click Body to Select Block</option>'));
-      $('#mobileSelect').val((dataList.length == 0 || selected == null) ? -1 : selected);
-
-      $('#mobileSelect').unbind('change').on('change', function() {
-        var index = parseInt($(this).val());
-        if (index == selected) selected = null;
-        else selected = index;
-        refresh();
+      $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
+        $(n).css('visibility', 'hidden');
+        $(n).css('fill', 'grey');
       });
 
-      $('#dataList').toggle(state.listType != 'map');
-      $('#dataList').empty();
-      dataList.map(function(item, i) {
-        var isSelected = i == selected;
-        if (item.type == 'surgery') {
-          var data = surgeries[item.name];
-          $('#dataList').append($(''+
-`<div class="dataRow" data-type="surgery" data-index="${i}" style="user-select: text; padding: 6px;background-color: #0e5da4;border-radius: 5px;margin: 5px;color: white; cursor: pointer;border: ${isSelected ? 'black' : 'white'} solid 2px;">
-  ${panes == 'one' ? ''+
-  `<i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>` : 
-  `<i class="fa-solid fa-magnifying-glass" style="float: right; margin-right: 5px; margin-top: 3px;"></i>` }
-  <i class="removeData fa-solid fa-xmark" style="margin-right: 7px; margin-left: 4px;"></i>
-  <span>Surgery: ${data.name}</span>
-</div>`));
-        } else if (item.type == 'block') {
-          $('#dataList').append($(''+
-`<div class="dataRow" data-type="block" data-index="${i}" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px;cursor: pointer;border: ${isSelected ? '#125da6' : 'white'} solid 2px;">
-  ${panes == 'one' ? ''+
-  `<i class="fa-solid fa-child-reaching bodyJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>
-   <i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>` : 
-  `<i class="fa-solid fa-arrow-right" style="float: right; margin-right: 5px; margin-top: 3px;"></i>` }
-  <i class="removeData fa-solid fa-xmark" style="margin-right: 7px; margin-left: 4px;"></i>
-  <span>${item.names.map(function(blockName) {
-    return blocks[blockName].name;
-  }).join(' + ')}</span>
-</div>`));
-        }
-      });
-      
-      $('.dataRow').unbind('click').click(function() {
-        var index = getProp(this, 'index');
-        if (index == selected) selected = null;
-        else selected = index;
-        refresh();
-      });
-
-      $('.removeData').unbind('click').click(function(e) {
-        e.stopPropagation();
-        var index = parseInt(getProp(this, 'index'));
-        dataList.splice(index, 1);
-        selected = null;
-        refresh();
-      });
-
-      $('.notesJump').unbind('click').click(function(e) {
-        e.stopPropagation();
-        var index = parseInt(getProp(this, 'index'));
-        selected = index;
-        state.pane = 'notes';
+      $('#flipSyringe').hide().unbind('click').click(function() {
+        state.bodySide = state.bodySide == 'back' ? 'front' : 'back';
         saveState();
-        updateLayout();
         refresh();
       });
 
-      $('.bodyJump').unbind('click').click(function(e) {
-        e.stopPropagation();
-        var index = parseInt(getProp(this, 'index'));
-        selected = index;
-        state.pane = 'body';
-        saveState();
-        updateLayout();
-        refresh();
-      });
+      var syringeList = '';
+      // $('.syringeList2').empty();
+      var addSyringe = function(block, side) {
+        if (block.syringe == null) return;
+        // return;
+        if (block.syringe.bodySide != null && block.syringe.bodySide != state.bodySide) {
+          $('#flipSyringe').show();
+          return;
+        }
+        var onLeft = state.bodySide == 'front' ? side == 'right' : side == 'left';
+        syringeList += '<image href="./res/images/syringe.png" style="width: 25px;transform: translate('+(!onLeft ? 'calc(100% - '+block.syringe.side+'px)' : block.syringe.side+'px')+', '+block.syringe.top+'px)'+(!onLeft ? 'scaleX(-1)' : '')+'rotate('+block.syringe.rotate+'deg);"></image>';
+          // width: 54px;position: absolute;'+(!!flipped ? 'right' : 'left')+': '+block.syringe.side+';top: '+block.syringe.top+';transform: '+(!!flipped ? 'scaleX(-1)' : '')+'rotate('+block.syringe.rotate+'deg);
+      };
+
+      $('#folders').toggle(state.listType == 'custom').empty();
+      $('#surgeryResults').toggle(state.listType == 'surgery').empty();
+
+      backgroundBlocks = {};
+      foregroundBlocks = {};
 
       var noteItem = null;
       if (state.listType == 'map') {
+        var focusId = mapHoverBlock || mapClickBlock;
 
         if (!opts.skipMapDraw) {
           $('#mapSelect').empty();
@@ -942,7 +1042,7 @@
           });
           
           var mapItem = mapList.find(n => n.id == mapChoice);
-          var focusId = mapHoverBlock || mapClickBlock;
+          // var focusId = mapHoverBlock || mapClickBlock;
           $('#mapTitle').text('Click or hover over a spot to block');
           $('#mapImg').attr('src', mapItem.img);
           $('#mapSpotList').empty();
@@ -967,86 +1067,278 @@
           });
         }
         
+        $('.mapSpot').removeClass('active');
+        $('.mapSpot[data-block="'+mapClickBlock+'"]').addClass('active');
+
         if (focusId != null) {
           noteItem = { type: 'block', names: [focusId] };
           var data = blocks[focusId];
           if (data != null) $('#mapTitle').text(data.name);
         }
-      } else if (dataList[selected] != null) noteItem = dataList[selected];
 
-      $('.mapSpot').removeClass('active');
-      $('.mapSpot[data-block="'+mapClickBlock+'"]').addClass('active');
-
-      var backgroundBlocks = {};
-      var selectedBlocks = {};
-
-      dataList.map(function(item, i) {
-        if (item.names == null) return;
-        var isSelected = i == selected;
-        if (isSelected) {
-          item.names.map(function(blockName) {
-            selectedBlocks[blockName] = true;
-          })
-        } else if (state.listType == 'custom') {
-          item.names.map(function(blockName) {
-            backgroundBlocks[blockName] = true;
-          });
-        }
-      });
-
-      $('#front, #back, #fullFront, #fullBack').find('#layer10, #layer9').children().each(function(i, n) {
-        $(n).css('visibility', 'hidden');
-        $(n).css('fill', 'grey');
-      });
-
-      $('#flipSyringe').hide().unbind('click').click(function() {
-        state.bodySide = state.bodySide == 'back' ? 'front' : 'back';
-        saveState();
-        refresh();
-      });
-
-      var syringeList = '';
-      // $('.syringeList2').empty();
-      var addSyringe = function(block, flipped) {
-        if (block.syringe == null) return;
-        // return;
-        if (block.syringe.bodySide != null && block.syringe.bodySide != state.bodySide) {
-          $('#flipSyringe').show();
-          return;
-        }
-        syringeList += '<image href="/res/images/syringe.png" style="width: 25px;transform: translate('+(!!flipped ? 'calc(100% - '+block.syringe.side+'px)' : block.syringe.side+'px')+', '+block.syringe.top+'px)'+(!!flipped ? 'scaleX(-1)' : '')+'rotate('+block.syringe.rotate+'deg);"></image>';
-          // width: 54px;position: absolute;'+(!!flipped ? 'right' : 'left')+': '+block.syringe.side+';top: '+block.syringe.top+';transform: '+(!!flipped ? 'scaleX(-1)' : '')+'rotate('+block.syringe.rotate+'deg);
-      };
-
-      if (state.listType == 'map') {
         if (mapClickBlock != null && mapHoverBlock != null && mapClickBlock != mapHoverBlock && blocks[mapClickBlock] != null) {
-          showBlock(blocks[mapClickBlock].coverage, 'left', { color: 'grey' });
-          showBlock(blocks[mapClickBlock].coverage, 'right', { color: 'grey' });
-          addSyringe(blocks[mapClickBlock]);
-          addSyringe(blocks[mapClickBlock], true);
+          backgroundBlocks[mapClickBlock] = {};
+          // blocks[mapClickBlock].covList.map(function(covItem) {
+          //   showBlock(covItem.coverage, 'left', { color: 'grey' });
+          //   showBlock(covItem.coverage, 'right', { color: 'grey' });
+          //   // addSyringe(covItem, 'left');
+          //   // addSyringe(covItem, 'right');
+          // });
         }
 
         var focusId = mapHoverBlock || mapClickBlock;
         var focusData = blocks[focusId];
         if (focusData != null) {
           noteItem = { type: 'block', names: [focusId] };
-          showBlock(focusData.coverage, 'left', { color: '#0998a8' });
-          showBlock(focusData.coverage, 'right', { color: '#0998a8' });
-          addSyringe(focusData);
-          addSyringe(focusData, true);
+          foregroundBlocks[focusId] = {};
+          // focusData.covList.map(function(covItem) {
+          //   showBlock(covItem.coverage, 'left', { color: '#0998a8' });
+          //   showBlock(covItem.coverage, 'right', { color: '#0998a8' });
+          //   addSyringe(covItem, 'left');
+          //   addSyringe(covItem, 'right');
+          // });
         }
-      } else {
-        for (var blockName in backgroundBlocks) {
-          showBlock(blocks[blockName].coverage, 'left', { color: 'grey' });
-          showBlock(blocks[blockName].coverage, 'right', { color: 'grey' });
+
+      } if (state.listType == 'surgery') {
+        var surgeryResult = surgeries[selectedSurgery];
+
+        if (surgeryResult == null) {
+        } else {
+          $('#surgeryResults').append($(''+
+            '<div style="user-select: text; padding: 6px;background-color: #0e5da4;border-radius: 5px;margin: 5px;color: white; cursor: pointer;">'+
+              '<span style="display: inline-block; width: 100%; text-align: center;">'+surgeryResult.name+'</span>'+
+              (surgeryResult.notes || []).map(function(surgNote) {
+                return '<p style="margin-bottom: 0px; margin-top: 5px;">'+surgNote+'</p>';
+              }).join('')+
+            '</div>'));
+
+          if (selectedSurgeryBlockIndex < 0) selectedSurgeryBlockIndex = 0;
+          else if (selectedSurgeryBlockIndex > surgeryResult.blocks.length - 1) selectedSurgeryBlockIndex = surgeryResult.blocks.length - 1;
+
+          if (surgeryResult.blocks.length > 0) {
+            if (selectedSurgeryBlockIndex != null) {
+              noteItem = {
+                type: 'block',
+                names: surgeryResult.blocks[selectedSurgeryBlockIndex]
+              };
+            }
+
+            surgeryResult.blocks.map(function(blockGroup, i) {
+              var isFocus = i == selectedSurgeryBlockIndex;
+              if (isFocus) {
+                blockGroup.map(function(blockName) {
+                  foregroundBlocks[blockName] = {};
+                });
+              }
+
+              $('#surgeryResults').append($(''+
+                `<div class="surgeryRow" data-index="${i}" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px; cursor: pointer;border: ${isFocus ? 'black' : 'white'} solid 2px;">
+                  ${panes == 'one' ? '<i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>' : 
+                  '<i class="fa-solid fa-magnifying-glass surgeryFocus" style="float: right; margin-right: 5px; margin-top: 3px;"></i>' }
+                  <i class="removeData fa-solid fa-xmark" style="margin-right: 7px; margin-left: 4px;"></i>
+                  <span>${blockGroup.map(function(blockName) {
+                      return blocks[blockName].name;
+                    }).join(' + ')}</span>
+                </div>`));
+            });
+          }
+
+          $('.surgeryRow').unbind('click').click(function() {
+            var newIndex = parseInt(getProp(this, 'index'));
+            if (selectedSurgeryBlockIndex == newIndex) selectedSurgeryBlockIndex = null;
+            else selectedSurgeryBlockIndex = newIndex
+            refresh();
+          });
+
+          $('.surgeryFocus').unbind('click').click(function(e) {
+            selectedSurgeryBlockIndex = parseInt(getProp(this, 'index'));
+            e.stopPropagation();
+            refresh();
+          });
         }
-        for (var blockName in selectedBlocks) {
-          showBlock(blocks[blockName].coverage, 'left', { color: '#0998a8' });
-          showBlock(blocks[blockName].coverage, 'right', { color: '#0998a8' });
-          addSyringe(blocks[blockName]);
-          addSyringe(blocks[blockName], true);
+      } if (state.listType == 'custom') {
+        
+        // noteItem = dataList[selected];
+        // Make filteredBlockList, filteredBlockSet
+
+        filteredBlockList = [];
+        var query = $('#blockSearch').val().trim();
+        var isLocation = query == 'Location Pin';
+
+        var groupSets = {};
+        blockGroups.map(function(groupItem, i) {
+          var includedBlocks = groupItem.blocks.filter(function(blockName) {
+            return query.length == 0 || (isLocation && !!locationSet[blockName]) || ((blocks[blockName] || {}).name || '').toLowerCase().indexOf(query.toLowerCase()) >= 0 || selectedBlocks[blockName] != null;
+          });
+
+          groupSets[groupItem.groupName] = includedBlocks;
+          filteredBlockList = filteredBlockList.concat(includedBlocks);
+        });
+
+        if (filteredBlockIndex < 0) filteredBlockIndex = 0;
+        else if (filteredBlockIndex > filteredBlockList.length - 1) filteredBlockIndex = filteredBlockList.length - 1;
+
+        if (filteredBlockList[filteredBlockIndex] != null) {
+          noteItem = {
+            type: 'block',
+            names: [filteredBlockList[filteredBlockIndex]]
+          };
+        }
+
+        var index = 0;
+        blockGroups.map(function(groupItem, i) {
+          var includedBlocks = groupSets[groupItem.groupName];
+          if (includedBlocks.length == 0) return;
+
+          var openGroup = !!openBlockGroups[groupItem.groupName] || query.length > 0;
+
+          $('#folders').append($(''+
+          '<div class="blockGroup" data-index="'+i+'" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px;cursor: pointer;border: white solid 2px;">'+
+            '<i class="fa-solid fa-caret-'+(!openGroup ? 'right' : 'down')+'" style="margin-right: 7px; margin-left: 4px;"></i>'+
+            '<span>'+groupItem.groupName+'</span>'+
+          '</div>'));
+
+          includedBlocks.map(function(blockName) {
+            var isFocus = index == filteredBlockIndex;
+
+            if (isFocus) foregroundBlocks[blockName] = (locationSet[blockName] != null && !!isLocation) ? locationSet[blockName] : {};
+            else if (selectedBlocks[blockName] != null) (filteredBlockIndex == null ? foregroundBlocks : backgroundBlocks)[blockName] = (locationSet[blockName] != null && !!isLocation) ? locationSet[blockName] : {};
+
+            index++;
+            var block = blocks[blockName];
+
+            if (!openGroup) return;
+
+            $('#folders').append($(''+
+              '<div class="blockRow" data-index="'+(index-1)+'" style="user-select: text; padding: 6px;background-color: lightgrey;border-radius: 5px;margin: 5px; cursor: pointer;border: '+(isFocus ? 'black' : 'white')+' solid 2px; margin-left: 20px;">'+
+                (panes == 'one' ? '<i class="fa-solid fa-child-reaching bodyJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>'+
+                '<i class="fa-solid fa-file-lines notesJump" style="float: right;margin-right: 5px;margin-top: 3px;width: 25px;text-align: center;"></i>' : 
+                '<i class="fa-solid fa-magnifying-glass blockFocus" style="float: right; margin-right: 5px; margin-top: 3px;"></i>' )+
+                '<input class="blockSelect" type="checkbox" '+(!!selectedBlocks[blockName] ? 'checked' : '')+' style="width: 16px; height: 16px; margin: 4px; vertical-align: top;">'+
+                '<span>'+block.name+'</span>'+
+              '</div>'));
+
+          });
+        });
+      }
+
+      if (panes == 'one') {
+        $('#mobileSelect').empty();
+        if ($('#blockSearch').val() == 'Location Pin') {
+          filteredBlockList.map(function(blockName, i) {
+            $('#mobileSelect').append($('<option value="'+i+'">'+blocks[blockName].name+'</option>'))
+          });
+          if (filteredBlockList.length == 0 || filteredBlockIndex == null) $('#mobileSelect').append($('<option value="-1">Click Body to Select Block</option>'));
+          $('#mobileSelect').val((filteredBlockList.length == 0 || filteredBlockIndex == null) ? -1 : filteredBlockIndex);
+        } else {
+          $('#mobileSelect').append($('<option value="-1">Click Body to Select Block</option>'));
+        }
+
+        $('#mobileSelect').unbind('change').on('change', function() {
+          var index = parseInt($(this).val());
+          if (index == filteredBlockIndex) filteredBlockIndex = null;
+          else filteredBlockIndex = index;
+          refresh();
+        });
+      }
+
+      $('.blockSelect').unbind('click').on('click', function() {
+        var blockIndex = parseInt(getProp(this, 'index'));
+        var block = filteredBlockList[blockIndex];
+        var isChecked = $(this).prop('checked'); // $(this).is(':checked');
+        if (isChecked) {
+          selectedBlocks[block] = true;
+          filteredBlockIndex = blockIndex;
+        } else delete selectedBlocks[block];
+        refresh();
+      });
+
+      $('.blockRow').unbind('click').on('click', function(e) {
+        var newIndex = parseInt(getProp(this, 'index'));
+        if (newIndex == filteredBlockIndex) filteredBlockIndex = null;
+        else filteredBlockIndex = newIndex;
+        refresh();
+      });
+
+      $('.blockFocus').unbind('click').click(function(e) {
+        filteredBlockIndex = parseInt(getProp(this, 'index'));
+        e.stopPropagation();
+        refresh();
+      });
+      
+      $('.blockGroup').unbind('click').click(function() {
+        var groupIndex = parseInt(getProp(this, 'index'));
+        var query = $('#blockSearch').val().trim();
+        if (query.length > 0) return;
+
+        var groupItem = blockGroups[groupIndex];
+        if (openBlockGroups[groupItem.groupName] == null) openBlockGroups[groupItem.groupName] = true;
+        else delete openBlockGroups[groupItem.groupName];
+        refresh();
+      });
+
+      for (var blockName in backgroundBlocks) {
+        blocks[blockName].covList.map(function(covItem) {
+          showBlock(covItem.coverage, 'left', { color: 'grey' });
+          showBlock(covItem.coverage, 'right', { color: 'grey' });
+        });
+      }
+      for (var blockName in foregroundBlocks) {
+        var blockInfo = foregroundBlocks[blockName];
+        if (blockInfo.side != null) {
+          var covItem = blocks[blockName].covList[blockInfo.covIndex];
+          if (!!covItem.bilateral) {
+            showBlock(covItem.coverage, 'left', { color: '#0998a8' });
+            showBlock(covItem.coverage, 'right', { color: '#0998a8' });
+          } else {
+            showBlock(covItem.coverage, blockInfo.side.split('_')[0], { color: '#0998a8' });
+          }
+          addSyringe(covItem, blockInfo.side.split('_')[0]);
+        } else {
+          blocks[blockName].covList.map(function(covItem) {
+            showBlock(covItem.coverage, 'left', { color: '#0998a8' });
+            showBlock(covItem.coverage, 'right', { color: '#0998a8' });
+            addSyringe(covItem, 'left');
+            addSyringe(covItem, 'right');
+          });
         }
       }
+
+
+      $('.dataRow').unbind('click').click(function() {
+        var index = getProp(this, 'index');
+        if (index == filteredBlockIndex) filteredBlockIndex = null;
+        else filteredBlockIndex = index;
+        refresh();
+      });
+
+      $('.removeData').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        dataList.splice(index, 1);
+        filteredBlockIndex = null;
+        refresh();
+      });
+
+      $('.notesJump').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        filteredBlockIndex = index;
+        state.pane = 'notes';
+        saveState();
+        updateLayout();
+        refresh();
+      });
+
+      $('.bodyJump').unbind('click').click(function(e) {
+        e.stopPropagation();
+        var index = parseInt(getProp(this, 'index'));
+        filteredBlockIndex = index;
+        state.pane = 'body';
+        saveState();
+        updateLayout();
+        refresh();
+      });
 
       $('.syringeList2').html(syringeList);
 
@@ -1064,31 +1356,6 @@
         }
       }
       $('#blockNotes').html(notes);
-
-
-      // $('#front, #back').find('#layer10, #layer9').children().each(function(i, n) {
-      //   $(n).css('visibility', '');
-      //   $(n).css('fill', 'grey');
-      // });
-      // showBlock(['back,path15628'], 'left');
-      // showBlock(['back,path15628'], 'right', { color: 'grey' });
-
-      if (blockSearchBox != null) {
-        blockSearchBox.list = _.toPairs(blocks).map(function(pair) {
-          return { name: pair[0], label: pair[1].name };
-        });
-      }
-
-      if (surgerySearchBox != null && !opts.noSurgeryRefresh) {
-        surgerySearchBox.list = surgeries.map(function(data, surgery_i) {
-          return { name: surgery_i, filterText: data.name, type: 'surgery', label: data.name };
-        }).concat(keys(blocks).map(function(blockName) {
-          var data = blocks[blockName];
-          return { name: blockName, filterText: data.surgeries, type: 'block', label: data.name };
-        }).filter(function(data) {
-          return data.filterText != null;
-        }));
-      }
 
       reloadSVG();
     };
@@ -1131,6 +1398,20 @@
       updateLayout();
       setMaxHeight('#bodyModal');
     });
+
+    $(window).on('keydown', function(e) {
+      if (e.keyCode == '40') { // Down
+        var surgeryResult = surgeries[selectedSurgery];
+        if (surgeryResult != null) selectedSurgeryBlockIndex = Math.min(surgeryResult.blocks.length - 1, selectedSurgeryBlockIndex + 1);
+        filteredBlockIndex = Math.min(filteredBlockList.length - 1, filteredBlockIndex + 1);
+        refresh();
+      } else if (e.keyCode == '38') { // Up
+        filteredBlockIndex = Math.max(0, filteredBlockIndex - 1);
+        selectedSurgeryBlockIndex = Math.max(0, selectedSurgeryBlockIndex - 1);
+        refresh();
+      }
+    });
+
     updateLayout();
 
     $(function() {
@@ -1143,7 +1424,12 @@
       })
 
       $('#clear').click(function() {
-        dataList = [];
+        selectedBlocks = {};
+        selectedSurgery = null;
+        filteredBlockIndex = null;
+        selectedSurgeryBlockIndex = null;
+        locationSet = {};
+        $('.locPt').remove();
         refresh();
       });
 
@@ -1165,27 +1451,30 @@
       surgerySearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
         $('#surgerySearch').val('');
         var value = data.text.value;
-        dataList = [];
+        selectedSurgery = value.name;
+        selectedSurgeryBlockIndex = 0;
 
-        if (value.type == 'surgery') {
-          var data = surgeries[value.name];
-          selected = dataList.length;
-          var surgItem = { type: 'surgery', name: value.name  };
-          if (data.blocks.length == 1) surgItem.names = data.blocks[0];
-          addToList(surgItem);
-          data.blocks.map(function(blockNames) {
-            addToList({
-              type: 'block',
-              names: blockNames
-            });
-          });
-          if (selected >= dataList.length) selected = dataList.length - 1;
-        } else if (value.type == 'block') {
-          var data = blocks[value.name];
-          selected = dataList.length;
-          addToList({ type: 'block', names: [value.name] });
-          if (selected >= dataList.length) selected = dataList.length - 1;
-        }
+        // dataList = [];
+
+        // if (value.type == 'surgery') {
+        //   var data = surgeries[value.name];
+        //   selected = dataList.length;
+        //   var surgItem = { type: 'surgery', name: value.name  };
+        //   if (data.blocks.length == 1) surgItem.names = data.blocks[0];
+        //   addToList(surgItem);
+        //   data.blocks.map(function(blockNames) {
+        //     addToList({
+        //       type: 'block',
+        //       names: blockNames
+        //     });
+        //   });
+        //   if (selected >= dataList.length) selected = dataList.length - 1;
+        // } else if (value.type == 'block') {
+        //   var data = blocks[value.name];
+        //   selected = dataList.length;
+        //   addToList({ type: 'block', names: [value.name] });
+        //   if (selected >= dataList.length) selected = dataList.length - 1;
+        // }
 
         refresh();
       });
@@ -1217,28 +1506,41 @@
         refresh({ noSurgeryRefresh: true });
       });
 
-      blockSearchBox = new Awesomplete($('#blockSearch')[0], {
-        list: [], minChars: 0, autoFirst: true, maxItems: 8,
-        data: function(item) {
-          return { label: item.label, value: item };
-        }
+      surgerySearchBox.list = surgeries.map(function(data, surgery_i) {
+        return { name: surgery_i, filterText: data.name, type: 'surgery', label: data.name };
+      // }).concat(keys(blocks).map(function(blockName) {
+      //   var data = blocks[blockName];
+      //   return { name: blockName, filterText: data.surgeries, type: 'block', label: data.name };
+      }).filter(function(data) {
+        return data.filterText != null;
       });
-      blockSearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
-        $('#blockSearch').val('');
-        var value = data.text.value;
-        var data = blocks[value.name];
 
-        selected = dataList.length;
-        addToList({ type: 'block', names: [value.name] });
-        if (selected >= dataList.length) selected = dataList.length - 1;
-
+      $('#blockSearch').unbind('input').on('input', function() {
         refresh();
       });
 
+      // blockSearchBox = new Awesomplete($('#blockSearch')[0], {
+      //   list: [], minChars: 0, autoFirst: true, maxItems: 8,
+      //   data: function(item) {
+      //     return { label: item.label, value: item };
+      //   }
+      // });
+      // blockSearchBox.container.addEventListener("awesomplete-selectcomplete", function(data) {
+      //   $('#blockSearch').val('');
+      //   var value = data.text.value;
+      //   var data = blocks[value.name];
+
+      //   selected = dataList.length;
+      //   addToList({ type: 'block', names: [value.name] });
+      //   if (selected >= dataList.length) selected = dataList.length - 1;
+
+      //   refresh();
+      // });
+
       $('[data-toggle="tooltip"]').tooltip();
 
-      $('#surgerySearch, #blockSearch').parent().css('width', 'calc(100% - 10px)');
-      $('#surgerySearch, #blockSearch').parent().find('ul').css('margin-left', '5px');
+      $('#surgerySearch' /*, #blockSearch' */).parent().css('width', 'calc(100% - 10px)');
+      $('#surgerySearch' /*, #blockSearch' */).parent().find('ul').css('margin-left', '5px');
 
       $.ajax({
         url: './res/svg/bodymapFront.svg',
